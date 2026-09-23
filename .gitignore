@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+
+# expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# native (Expo prebuild 산출물)
+ios/
+android/
+
+# logs
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# env
+.env
+.env.*
+!.env.example
+
+# 인증서·키 (절대 커밋 금지)
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
