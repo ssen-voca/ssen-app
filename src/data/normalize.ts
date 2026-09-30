@@ -33,7 +33,7 @@ export function alignDefinitions(meanings: string[], values: unknown[]): string[
   return meanings.map((_, i) => String(values[i] || '').trim());
 }
 
-function makeId(): string {
+export function makeId(): string {
   const cryptoApi = globalThis.crypto;
   return cryptoApi && typeof cryptoApi.randomUUID === 'function' ? cryptoApi.randomUUID() : `${Date.now()}-${Math.random()}`;
 }
