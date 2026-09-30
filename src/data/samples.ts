@@ -1,0 +1,72 @@
+import type { Word } from './types';
+
+export const SAMPLE_WORDS: Word[] = [
+  {
+    id: 'sample-cultivate',
+    word: 'cultivate',
+    meanings: ['경작하다, 재배하다', '기르다, 함양하다', '관계를 쌓다'],
+    definitions: [
+      'to prepare and use land for growing crops',
+      'to develop a quality or skill through effort',
+      'to develop and maintain a relationship over time',
+    ],
+    chapter: 'Day 1',
+    details: {
+      example: 'The course helps students cultivate critical thinking.',
+      exampleKo: '이 과정은 학생들이 비판적 사고력을 기르도록 돕는다.',
+      exampleMeaning: '기르도록',
+      synonyms: 'nurture, develop, foster',
+      antonyms: 'neglect',
+      derived: 'cultivation, cultivated',
+      related: 'grow, encourage',
+    },
+  },
+  {
+    id: 'sample-resilient',
+    word: 'resilient',
+    meanings: ['회복력이 있는', '탄력 있는'],
+    definitions: ['able to recover quickly from difficulty', 'able to return to its original shape after being bent'],
+    chapter: 'Day 1',
+    details: {
+      example: 'She remained resilient through every change.',
+      exampleKo: '그녀는 모든 변화 속에서도 회복력을 유지했다.',
+      exampleMeaning: '회복력을 유지했다',
+      synonyms: 'strong, flexible',
+      antonyms: 'fragile',
+      derived: 'resilience, resiliently',
+      related: 'durable, adaptable',
+    },
+  },
+  {
+    id: 'sample-insight',
+    word: 'insight',
+    meanings: ['통찰력', '이해'],
+    definitions: ['the ability to understand a situation deeply', 'an understanding of something'],
+    chapter: 'Day 1',
+    details: {
+      example: 'The data gave us a useful insight.',
+      exampleKo: '그 데이터는 우리에게 유용한 통찰력을 주었다.',
+      exampleMeaning: '통찰력',
+      synonyms: 'perception, understanding',
+      antonyms: 'ignorance',
+      derived: 'insightful',
+      related: 'awareness, intuition',
+    },
+  },
+  {
+    id: 'sample-derive',
+    word: 'derive',
+    meanings: ['이끌어내다', '유래하다'],
+    definitions: ['to obtain something from a source', 'to come from or originate in something'],
+    chapter: 'Day 2',
+    details: {
+      example: 'We can derive the formula from this result.',
+      exampleKo: '우리는 이 결과로부터 공식을 이끌어낼 수 있다.',
+      exampleMeaning: '이끌어낼',
+      synonyms: 'obtain, deduce',
+      antonyms: '',
+      derived: 'derivation, derivative',
+      related: 'infer, originate',
+    },
+  },
+];

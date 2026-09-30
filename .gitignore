@@ -6,6 +6,8 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+.metro-health-check*
+*.tsbuildinfo
 
 # native (Expo prebuild 산출물)
 ios/
