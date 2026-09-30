@@ -34,7 +34,7 @@ import { useToast } from './Toast';
 
 export const NOT_PERSISTED_MESSAGE = '저장소를 쓸 수 없어 이 기기에 저장되지 않아요';
 
-type Session = { id?: string; initial: FormValues };
+type Session = { id?: string; initial: FormValues; nonce: number };
 type WordFormContextValue = { open: (id?: string) => void };
 
 const WordFormContext = createContext<WordFormContextValue>({ open: () => {} });
@@ -46,17 +46,21 @@ export function useWordForm(): WordFormContextValue {
 export function WordFormProvider({ children }: { children: ReactNode }) {
   const { ready, words, prefs } = useWords();
   const [session, setSession] = useState<Session | null>(null);
+  const nonce = useRef(0);
 
   const open = useCallback(
     (id?: string) => {
       if (!ready) return;
       if (id === undefined) {
         const chapters = chapterOptions(words);
-        setSession({ initial: emptyForm(chapters.includes(prefs.activeChapter) ? prefs.activeChapter : chapters[0]) });
+        setSession({
+          nonce: ++nonce.current,
+          initial: emptyForm(chapters.includes(prefs.activeChapter) ? prefs.activeChapter : chapters[0]),
+        });
         return;
       }
       const word = words.find((item) => item.id === id);
-      if (word) setSession({ id, initial: formFromWord(word) });
+      if (word) setSession({ id, nonce: ++nonce.current, initial: formFromWord(word) });
     },
     [ready, words, prefs.activeChapter],
   );
@@ -66,7 +70,7 @@ export function WordFormProvider({ children }: { children: ReactNode }) {
   return (
     <WordFormContext.Provider value={value}>
       {children}
-      {session && <WordFormSheet {...session} onClose={() => setSession(null)} />}
+      {session && <WordFormSheet key={session.nonce} {...session} onClose={() => setSession(null)} />}
     </WordFormContext.Provider>
   );
 }
@@ -115,7 +119,7 @@ function Field({ spec, children }: { spec: FieldSpec; children: ReactNode }) {
   );
 }
 
-function Input({ spec, value, onChange }: { spec: FieldSpec; value: string; onChange: (value: string) => void }) {
+function Input({ spec, value, onChange, onSubmit }: { spec: FieldSpec; value: string; onChange: (value: string) => void; onSubmit: () => void }) {
   const [focused, setFocused] = useState(false);
   const multiline = !!spec.rows;
   return (
@@ -124,8 +128,8 @@ function Input({ spec, value, onChange }: { spec: FieldSpec; value: string; onCh
       onChangeText={onChange}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
+      onSubmitEditing={multiline ? undefined : onSubmit}
       placeholder={spec.placeholder}
-      placeholderTextColor="#9aa3ae"
       accessibilityLabel={spec.label}
       aria-required={spec.required || undefined}
       autoComplete="off"
@@ -239,7 +243,7 @@ function WordFormSheet({ id, initial, onClose }: SheetProps) {
       {spec.key === 'chapter' ? (
         <ChapterSelect value={values.chapter} options={options} onChange={set('chapter')} />
       ) : (
-        <Input spec={spec} value={values[spec.key]} onChange={set(spec.key)} />
+        <Input spec={spec} value={values[spec.key]} onChange={set(spec.key)} onSubmit={submit} />
       )}
     </Field>
   );
