@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   top: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', paddingLeft: 3 },
-  main: { flex: 1, minWidth: 0 },
+  main: { flexShrink: 1, minWidth: 0 },
   index: { marginBottom: 6, color: '#a1a9b3', fontSize: 11, fontWeight: '800', letterSpacing: 0.88 },
   title: { fontSize: 23, lineHeight: 28.75, letterSpacing: -0.575, fontWeight: '700' },
   meanings: { marginTop: 7 },
@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
   mini: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   details: {
     marginTop: 14,
+    marginBottom: 16,
     paddingTop: 14,
     paddingLeft: 3,
     borderTopWidth: 1,

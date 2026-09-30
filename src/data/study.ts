@@ -42,8 +42,11 @@ export function registerTap(lastTap: number, now: number): { toggle: boolean; la
 
 export function isKeyboardPress(event: unknown): boolean {
   if (!event || typeof event !== 'object') return false;
-  const e = event as { type?: unknown; nativeEvent?: { type?: unknown } };
-  return [e.type, e.nativeEvent?.type].some((type) => type === 'keyup' || type === 'keydown');
+  const e = event as { type?: unknown; detail?: unknown; nativeEvent?: { type?: unknown; detail?: unknown } };
+  const isKey = [e.type, e.nativeEvent?.type].some((type) => type === 'keyup' || type === 'keydown');
+  // Enter/Space on a native <button> arrives as a synthetic click with detail 0
+  const isKeyClick = [e, e.nativeEvent].some((x) => x?.type === 'click' && x.detail === 0);
+  return isKey || isKeyClick;
 }
 
 type WheelInput = { deltaY: number; revealed: boolean; length: number; now: number; lastWheel: number };

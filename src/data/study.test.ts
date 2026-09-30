@@ -73,6 +73,10 @@ describe('isKeyboardPress', () => {
     expect(isKeyboardPress({ type: 'keyup' })).toBe(true);
     expect(isKeyboardPress({ nativeEvent: { type: 'keydown' } })).toBe(true);
     expect(isKeyboardPress({ type: 'click', nativeEvent: { type: 'pointerup' } })).toBe(false);
+    expect(isKeyboardPress({ type: 'click', detail: 0 })).toBe(true);
+    expect(isKeyboardPress({ nativeEvent: { type: 'click', detail: 0 } })).toBe(true);
+    expect(isKeyboardPress({ type: 'click', detail: 1 })).toBe(false);
+    expect(isKeyboardPress({ type: 'click' })).toBe(false);
     expect(isKeyboardPress(undefined)).toBe(false);
   });
 });

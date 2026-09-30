@@ -48,6 +48,7 @@ export default function StudyScreen() {
   const wheelRef = useRef<View>(null);
   const lastTap = useRef(0);
   const lastWheel = useRef(0);
+  const lastSwipe = useRef(0);
 
   const move = useCallback(
     (step: number) => {
@@ -65,7 +66,10 @@ export default function StudyScreen() {
         .failOffsetY([-20, 20])
         .onEnd((event) => {
           const step = swipeDirection(event.translationX, event.translationY);
-          if (step !== 0) move(step);
+          if (step !== 0) {
+            lastSwipe.current = Date.now();
+            move(step);
+          }
         }),
     [move],
   );
@@ -106,6 +110,11 @@ export default function StudyScreen() {
   }, [move, ready, state.revealed, total]);
 
   const onCardPress = (event: GestureResponderEvent) => {
+    // a mouse drag still fires a click afterwards; don't count it as a tap on the next card
+    if (Date.now() - lastSwipe.current < 100) {
+      lastTap.current = 0;
+      return;
+    }
     if (isKeyboardPress(event)) {
       dispatch({ type: 'toggleCard' });
       return;

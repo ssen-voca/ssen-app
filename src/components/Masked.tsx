@@ -40,7 +40,7 @@ export function Masked({ masked, onPress, style, children }: Props) {
 
 const styles = StyleSheet.create({
   masked: { borderRadius: 7, backgroundColor: '#e9edf2', minWidth: 70 },
-  hidden: { opacity: 0 },
+  hidden: { opacity: 0, pointerEvents: 'none' },
   overlay: {
     position: 'absolute',
     top: 0,

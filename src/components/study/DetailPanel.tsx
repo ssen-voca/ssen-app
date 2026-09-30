@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
   headIconText: { color: colors.accent, fontSize: 13 },
   headTitle: { color: '#5c6762', fontSize: 11, letterSpacing: 0.165, fontWeight: '700' },
-  next: { marginLeft: 'auto' },
+  next: { marginLeft: 'auto', paddingVertical: 1, paddingHorizontal: 6 },
   nextText: { color: colors.accent, fontSize: 19 },
   definitions: { flexDirection: 'row', marginTop: 10, marginBottom: 13 },
   definitionMarker: {
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     lineHeight: 18.6,
     fontWeight: '800',
   },
-  definition: { flex: 1, paddingLeft: 3, marginBottom: 5, fontSize: 12, lineHeight: 18.6 },
+  definition: { flex: 1, paddingLeft: 3, fontSize: 12, lineHeight: 18.6 },
   noDetail: { marginVertical: 12, color: colors.muted, fontSize: 12, lineHeight: 18 },
   chipRow: { flexDirection: 'row', gap: 6, alignItems: 'flex-start', paddingTop: 9 },
   chipRowFirst: { borderTopWidth: 1, borderTopColor: '#eeeae5' },
