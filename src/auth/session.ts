@@ -69,6 +69,8 @@ export function createSession({ api, storage }: Deps) {
         await storage.saveTokens(cached);
         return accessToken;
       } catch (error) {
+        // 갱신 중에 로그아웃·재로그인이 있었다면 지금 저장된 토큰은 새 세션 것이므로 건드리지 않는다.
+        if (started !== generation) throw new SessionExpiredError();
         if (isUnauthorized(error)) return expire();
         throw error;
       } finally {
@@ -82,17 +84,23 @@ export function createSession({ api, storage }: Deps) {
   async function call<T>(fn: (accessToken: string) => Promise<T>): Promise<T> {
     const tokens = await current();
     if (!tokens) throw new SessionExpiredError();
+    const started = generation;
     try {
       return await fn(tokens.accessToken);
     } catch (error) {
       if (!isUnauthorized(error)) throw error;
     }
+    // 그 사이 세션이 바뀌었다면(로그아웃·재로그인) 이전 호출을 다른 사용자의 토큰으로 재시도하지 않는다.
+    if (started !== generation) throw new SessionExpiredError();
     const accessToken = await refreshOnce(tokens.accessToken);
+    if (started !== generation) throw new SessionExpiredError();
     try {
       return await fn(accessToken);
     } catch (error) {
-      if (isUnauthorized(error)) return expire();
-      throw error;
+      if (!isUnauthorized(error)) throw error;
+      // 메모리의 토큰이 방금 실패한 토큰일 때만 만료로 처리한다.
+      if (cached?.accessToken === accessToken) return expire();
+      throw new SessionExpiredError();
     }
   }
 

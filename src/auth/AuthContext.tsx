@@ -11,7 +11,8 @@ type AuthContextValue = {
   signup: (name: string, phoneLast4: string) => Promise<void>;
   login: (name: string, phoneLast4: string) => Promise<void>;
   logout: () => Promise<void>;
-  saveClassCode: (classCode: string) => Promise<void>;
+  /** 저장해서 반영했으면 true, 그 사이 로그아웃·재로그인으로 밀렸으면 false (호출한 쪽은 조용히 끝낸다). */
+  saveClassCode: (classCode: string) => Promise<boolean>;
   retry: () => void;
 };
 
@@ -21,7 +22,7 @@ const AuthContext = createContext<AuthContextValue>({
   signup: async () => {},
   login: async () => {},
   logout: async () => {},
-  saveClassCode: async () => {},
+  saveClassCode: async () => false,
   retry: () => {},
 });
 
@@ -85,11 +86,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [apply]);
 
   const saveClassCode = useCallback(
-    async (classCode: string) => {
+    async (classCode: string): Promise<boolean> => {
+      const mine = epoch.current;
       try {
         const user = await session.call((token) => authApi.setClassCode(token, classCode));
+        if (epoch.current !== mine) return false;
         apply('authenticated', user);
+        return true;
       } catch (error) {
+        if (epoch.current !== mine) return false;
         if (error instanceof SessionExpiredError) {
           epoch.current++;
           apply('anonymous');

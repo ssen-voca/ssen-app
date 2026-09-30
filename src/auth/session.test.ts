@@ -110,6 +110,74 @@ describe('session.call', () => {
   });
 });
 
+describe('session edge cases', () => {
+  it('starts a new refresh after a failed one (the shared promise is reset)', async () => {
+    const { session, api } = setup();
+    api.refresh.mockRejectedValueOnce(new ApiError(0, 'net'));
+    const fn = async (token: string) => {
+      if (token === 'old') throw unauthorized();
+      return token;
+    };
+    await expect(session.call(fn)).rejects.toBeInstanceOf(ApiError);
+    await expect(session.call(fn)).resolves.toBe('new');
+    expect(api.refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries a stale 401 with the already-refreshed token without a second refresh', async () => {
+    const { session, api } = setup();
+    let failLate!: () => void;
+    const late = new Promise<string>((_resolve, reject) => {
+      failLate = () => reject(unauthorized());
+    });
+    // first caller's request is slow and will fail with 401 only after another caller refreshed
+    const slow = session.call((token) => (token === 'old' ? late : Promise.resolve(token)));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await session.call(async (token) => {
+      if (token === 'old') throw unauthorized();
+      return token;
+    });
+    expect(api.refresh).toHaveBeenCalledTimes(1);
+    failLate();
+    await expect(slow).resolves.toBe('new');
+    expect(api.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a new login when logout + login happen during a refresh that then returns 401', async () => {
+    const { session, api, stored } = setup();
+    let fail!: () => void;
+    api.refresh.mockImplementation(
+      () =>
+        new Promise((_resolve, reject) => {
+          fail = () => reject(unauthorized());
+        }),
+    );
+    const pending = session.call(async () => Promise.reject(unauthorized()));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await session.clear();
+    await session.setTokens({ accessToken: 'mine', refreshToken: 'mine-r' });
+    fail();
+    await expect(pending).rejects.toBeInstanceOf(SessionExpiredError);
+    expect(stored()).toEqual({ accessToken: 'mine', refreshToken: 'mine-r' });
+    await expect(session.call(async (token) => token)).resolves.toBe('mine');
+  });
+
+  it('does not retry an old caller with a different login after a 401', async () => {
+    const { session, api } = setup();
+    let failLate!: () => void;
+    const late = new Promise<string>((_resolve, reject) => {
+      failLate = () => reject(unauthorized());
+    });
+    const pending = session.call((token) => (token === 'old' ? late : Promise.resolve(token)));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await session.clear();
+    await session.setTokens({ accessToken: 'other', refreshToken: 'other-r' });
+    failLate();
+    await expect(pending).rejects.toBeInstanceOf(SessionExpiredError);
+    expect(api.refresh).not.toHaveBeenCalled();
+    await expect(session.call(async (token) => token)).resolves.toBe('other');
+  });
+});
+
 describe('session token management', () => {
   it('keeps tokens in memory when saving fails', async () => {
     const { session, storage } = setup(null);

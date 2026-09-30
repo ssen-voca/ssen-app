@@ -1,5 +1,5 @@
 import { Redirect, router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ApiError } from '../../api/client';
 import { useAuth } from '../../auth/AuthContext';
@@ -15,6 +15,14 @@ export default function ClassCodeScreen() {
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const busy = useRef(false);
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   if (status === 'loading') return null;
   if (status === 'anonymous') return <Redirect href="/login" />;
@@ -31,10 +39,13 @@ export default function ClassCodeScreen() {
     setPending(true);
     setError('');
     try {
-      await saveClassCode(trimmed);
+      const saved = await saveClassCode(trimmed);
+      // 화면을 떠났거나 그 사이 로그아웃·재로그인으로 밀렸다면 조용히 끝낸다.
+      if (!saved || !mounted.current) return;
       toast('수업 참여 코드를 저장했어요');
       router.replace('/account');
     } catch (e) {
+      if (!mounted.current) return;
       if (e instanceof SessionExpiredError) {
         // 인증 상태가 anonymous로 바뀌어 이 화면은 곧 /login으로 넘어가므로 메시지는 토스트로 남긴다.
         toast('로그인이 만료됐어요. 다시 로그인해 주세요');
@@ -43,7 +54,7 @@ export default function ClassCodeScreen() {
       }
     } finally {
       busy.current = false;
-      setPending(false);
+      if (mounted.current) setPending(false);
     }
   };
 
