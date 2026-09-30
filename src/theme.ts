@@ -10,6 +10,7 @@ export const colors = {
   accent: '#2d7b71',
   accentDark: '#21665f',
   accentSoft: '#eaf4f0',
+  danger: '#ef4e4e',
 };
 
 export const cardShadow = '0 10px 24px rgba(38, 48, 42, 0.07)';

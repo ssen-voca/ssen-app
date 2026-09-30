@@ -10,26 +10,16 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import {
-  Animated,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-  type PressableStateCallbackType,
-} from 'react-native';
+import { Animated, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { makeId } from '../data/normalize';
 import type { Word } from '../data/types';
 import { buildWord, emptyForm, formFromWord, type FormValues } from '../data/wordForm';
 import { chapterOptions } from '../data/wordList';
 import { useWords } from '../data/WordsContext';
-import { CANVAS, colors, fonts, isNarrow } from '../theme';
+import { CANVAS, colors, isNarrow } from '../theme';
 import { AppText } from './AppText';
+import { Field, FormButton, FormInput, formStyles } from './FormControls';
 import { useToast } from './Toast';
 
 export const NOT_PERSISTED_MESSAGE = '저장소를 쓸 수 없어 이 기기에 저장되지 않아요';
@@ -102,41 +92,16 @@ const EXTRA_FIELDS: FieldSpec[] = [
   { key: 'related', label: '유의어', placeholder: 'durable, adaptable', full: true },
 ];
 
-function hovered(state: PressableStateCallbackType): boolean {
-  return !!(state as PressableStateCallbackType & { hovered?: boolean }).hovered;
-}
-
-function Field({ spec, children }: { spec: FieldSpec; children: ReactNode }) {
-  return (
-    <View style={styles.field}>
-      <AppText style={styles.label}>
-        {spec.label}
-        {spec.required && <Text style={styles.required}> *</Text>}
-        {spec.hint && <Text style={styles.hint}> {spec.hint}</Text>}
-      </AppText>
-      {children}
-    </View>
-  );
-}
-
 function Input({ spec, value, onChange, onSubmit }: { spec: FieldSpec; value: string; onChange: (value: string) => void; onSubmit: () => void }) {
-  const [focused, setFocused] = useState(false);
-  const multiline = !!spec.rows;
   return (
-    <TextInput
+    <FormInput
       value={value}
       onChangeText={onChange}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      onSubmitEditing={multiline ? undefined : onSubmit}
+      onSubmit={onSubmit}
       placeholder={spec.placeholder}
-      accessibilityLabel={spec.label}
-      aria-required={spec.required || undefined}
-      autoComplete="off"
-      autoCorrect={false}
-      multiline={multiline}
-      numberOfLines={spec.rows}
-      style={[styles.input, multiline ? styles.textarea : styles.singleLine, focused && styles.inputFocus]}
+      label={spec.label}
+      required={spec.required}
+      rows={spec.rows}
     />
   );
 }
@@ -239,7 +204,7 @@ function WordFormSheet({ id, initial, onClose }: SheetProps) {
   };
 
   const renderField = (spec: FieldSpec) => (
-    <Field key={spec.key} spec={spec}>
+    <Field key={spec.key} label={spec.label} hint={spec.hint} required={spec.required} style={formStyles.gridField}>
       {spec.key === 'chapter' ? (
         <ChapterSelect value={values.chapter} options={options} onChange={set('chapter')} />
       ) : (
@@ -307,16 +272,8 @@ function WordFormSheet({ id, initial, onClose }: SheetProps) {
           {renderGrid(EXTRA_FIELDS)}
 
           <View style={styles.actions}>
-            <Pressable accessibilityRole="button" onPress={onClose} style={[styles.button, styles.ghost]}>
-              <AppText style={[styles.buttonText, styles.ghostText]}>취소</AppText>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              onPress={submit}
-              style={(state) => [styles.button, styles.primary, hovered(state) && styles.primaryHover]}
-            >
-              <AppText style={[styles.buttonText, styles.primaryText]}>저장하기</AppText>
-            </Pressable>
+            <FormButton label="취소" variant="ghost" onPress={onClose} style={styles.ghost} />
+            <FormButton label="저장하기" onPress={submit} style={styles.primary} />
           </View>
         </ScrollView>
       </Animated.View>
@@ -345,27 +302,7 @@ const styles = StyleSheet.create({
   closeText: { color: '#56606e', fontSize: 30, lineHeight: 34 },
   grid: { rowGap: 14 },
   gridRow: { flexDirection: 'row', columnGap: 10 },
-  field: { flex: 1, minWidth: 0 },
   fieldSpacer: { flex: 1 },
-  label: { marginBottom: 7, marginLeft: 2, fontSize: 13, fontWeight: '700' },
-  required: { color: colors.accent },
-  hint: { color: colors.muted, fontSize: 10.8, fontWeight: '500' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#dfe4ea',
-    borderRadius: 14,
-    backgroundColor: '#fafbfc',
-    paddingVertical: 12,
-    paddingHorizontal: 13,
-    color: colors.text,
-    fontFamily: fonts.body,
-    fontSize: 14,
-    outlineWidth: 0,
-  },
-  singleLine: { height: 47 },
-  // 원본의 textarea는 inline-block이라 아래에 4px 줄 여백이 생긴다.
-  textarea: { textAlignVertical: 'top', marginBottom: 4 },
-  inputFocus: { borderColor: colors.accent, backgroundColor: '#fff', boxShadow: '0 0 0 3px rgba(23, 111, 242, 0.1)' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: { paddingVertical: 8, paddingHorizontal: 11, borderRadius: 10, borderWidth: 1, borderColor: '#dfe4ea', backgroundColor: '#fafbfc' },
   chipActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
@@ -375,11 +312,6 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.line },
   dividerText: { color: '#8a94a1', fontSize: 12, fontWeight: '700' },
   actions: { flexDirection: 'row', gap: 9, marginTop: 20 },
-  button: { minHeight: 47, paddingHorizontal: 18, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { fontSize: 14, fontWeight: '700' },
-  ghost: { flex: 0.8, backgroundColor: '#eef1f5' },
-  ghostText: { color: '#5d6673' },
-  primary: { flex: 1.2, backgroundColor: colors.accent },
-  primaryHover: { backgroundColor: colors.accentDark },
-  primaryText: { color: '#fff' },
+  ghost: { flex: 0.8 },
+  primary: { flex: 1.2 },
 });

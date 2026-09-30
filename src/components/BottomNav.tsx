@@ -5,14 +5,14 @@ import { colors, isNarrow } from '../theme';
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
 
-type NavItem = { label: string; icon: IconName; href: '/study' | '/' | '/test' | '/add' | '/account' };
+type NavItem = { label: string; icon: IconName; href: '/study' | '/' | '/test' | '/add' | '/account'; also?: string[] };
 
 const ITEMS: NavItem[] = [
   { label: '학습', icon: 'study', href: '/study' },
   { label: '홈', icon: 'home', href: '/' },
   { label: '시험', icon: 'test', href: '/test' },
   { label: '추가', icon: 'add', href: '/add' },
-  { label: '내 정보', icon: 'account', href: '/account' },
+  { label: '내 정보', icon: 'account', href: '/account', also: ['/login', '/signup', '/class-code'] },
 ];
 
 export function BottomNav() {
@@ -26,7 +26,7 @@ export function BottomNav() {
       style={[styles.nav, { height: 72 + insets.bottom, paddingBottom: insets.bottom }, isNarrow(width) && styles.navNarrow]}
     >
       {ITEMS.map((item) => {
-        const active = pathname === item.href;
+        const active = pathname === item.href || !!item.also?.includes(pathname);
         const color = active ? colors.accent : '#9aa3af';
         return (
           <Pressable
