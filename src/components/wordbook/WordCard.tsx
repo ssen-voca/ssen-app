@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type PressableStateCallbackType } from 'react-native';
 import { DETAIL_LABELS, detailRows, type DetailKey } from '../../data/filter';
 import { cardVisible, hasMask, isMasked } from '../../data/mask';
 import type { MaskField, Prefs, ShownMap, Word } from '../../data/types';
@@ -16,22 +16,35 @@ type Props = {
   shown: ShownMap;
   onToggleField: (field: MaskField) => void;
   onToggleCard: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 };
 
-function CardActions() {
+function CardActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
   return (
     <View style={styles.actions}>
-      <Pressable disabled accessibilityRole="button" accessibilityLabel="단어 수정 (준비 중)" style={styles.mini}>
-        <Icon name="edit" size={18} color="#9aa3ae" />
-      </Pressable>
-      <Pressable disabled accessibilityRole="button" accessibilityLabel="단어 삭제 (준비 중)" style={styles.mini}>
-        <Icon name="delete" size={18} color="#9aa3ae" />
-      </Pressable>
+      <MiniButton icon="edit" label="단어 수정" onPress={onEdit} />
+      <MiniButton icon="delete" label="단어 삭제" onPress={onDelete} />
     </View>
   );
 }
 
-export function WordCard({ word, number, mode, prefs, shown, onToggleField, onToggleCard }: Props) {
+function MiniButton({ icon, label, onPress }: { icon: 'edit' | 'delete'; label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={(state) => [styles.mini, (state as PressableStateCallbackType & { hovered?: boolean }).hovered && styles.miniHover]}
+    >
+      {(state) => (
+        <Icon name={icon} size={18} color={(state as PressableStateCallbackType & { hovered?: boolean }).hovered ? colors.text : '#9aa3ae'} />
+      )}
+    </Pressable>
+  );
+}
+
+export function WordCard({ word, number, mode, prefs, shown, onToggleField, onToggleCard, onEdit, onDelete }: Props) {
   const masked = (field: MaskField) => isMasked(prefs, shown, word.id, field);
 
   if (mode === 'list') {
@@ -52,7 +65,7 @@ export function WordCard({ word, number, mode, prefs, shown, onToggleField, onTo
               ))}
             </Masked>
           </View>
-          <CardActions />
+          <CardActions onEdit={onEdit} onDelete={onDelete} />
         </View>
       </View>
     );
@@ -100,7 +113,7 @@ export function WordCard({ word, number, mode, prefs, shown, onToggleField, onTo
             ))}
           </Masked>
         </View>
-        <CardActions />
+        <CardActions onEdit={onEdit} onDelete={onDelete} />
       </View>
       {rows.length > 0 && (
         <View style={styles.details}>
@@ -169,6 +182,7 @@ const styles = StyleSheet.create({
   bullet: { color: colors.accent },
   actions: { flexDirection: 'row', gap: 2, marginRight: -6 },
   mini: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  miniHover: { backgroundColor: colors.bg },
   details: {
     marginTop: 14,
     marginBottom: 16,

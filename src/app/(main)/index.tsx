@@ -11,10 +11,13 @@ import {
 import { AppText } from '../../components/AppText';
 import { Icon } from '../../components/Icon';
 import { MainScroll } from '../../components/MainScroll';
+import { useToast } from '../../components/Toast';
+import { NOT_PERSISTED_MESSAGE, useWordForm } from '../../components/WordFormSheet';
 import { MaskPanel } from '../../components/wordbook/MaskPanel';
 import { WordCard } from '../../components/wordbook/WordCard';
 import { searchWords } from '../../data/filter';
 import { anyCardVisible, toggleAll, toggleCard, toggleField } from '../../data/mask';
+import type { Word } from '../../data/types';
 import { useWords } from '../../data/WordsContext';
 import { colors, fonts, isNarrow } from '../../theme';
 
@@ -25,7 +28,9 @@ function todayLabel(): string {
 }
 
 export default function WordbookScreen() {
-  const { ready, words, prefs, setPref, shown, setShown } = useWords();
+  const { ready, words, prefs, setPref, shown, setShown, deleteWord } = useWords();
+  const { open } = useWordForm();
+  const toast = useToast();
   const [query, setQuery] = useState('');
   const [view, setView] = useState<ViewMode>('card');
   const { width } = useWindowDimensions();
@@ -34,6 +39,11 @@ export default function WordbookScreen() {
   if (!ready) {
     return <MainScroll>{null}</MainScroll>;
   }
+
+  const remove = async (word: Word) => {
+    const result = await deleteWord(word.id);
+    toast(result === 'saved' ? `‘${word.word}’ 단어를 삭제했어요` : NOT_PERSISTED_MESSAGE);
+  };
 
   const narrow = isNarrow(width);
   const heroSize = Math.min(30, Math.max(24, width * 0.07));
@@ -155,6 +165,8 @@ export default function WordbookScreen() {
               shown={shown}
               onToggleField={(field) => setShown(toggleField(shown, word.id, field))}
               onToggleCard={() => setShown(toggleCard(prefs, shown, word))}
+              onEdit={() => open(word.id)}
+              onDelete={() => remove(word)}
             />
           ))}
         </View>
@@ -170,7 +182,14 @@ export default function WordbookScreen() {
             {searching ? '다른 단어나 뜻으로 검색해 보세요.' : '직접 입력하거나 사진·엑셀 파일을 불러와 보세요.'}
           </AppText>
           {!searching && (
-            <Pressable disabled accessibilityRole="button" style={styles.emptyButton}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.navigate('/add')}
+              style={(state) => [
+                styles.emptyButton,
+                (state as PressableStateCallbackType & { hovered?: boolean }).hovered && styles.emptyButtonHover,
+              ]}
+            >
               <AppText style={styles.emptyButtonText}>첫 단어 추가하기</AppText>
             </Pressable>
           )}
@@ -303,5 +322,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  emptyButtonHover: { backgroundColor: colors.accentDark },
   emptyButtonText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });
