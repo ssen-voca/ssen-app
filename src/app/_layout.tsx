@@ -1,5 +1,6 @@
 import { Slot } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { AuthProvider } from '../auth/AuthContext';
 import { PhoneCanvas } from '../components/PhoneCanvas';
 import { ToastProvider } from '../components/Toast';
 import { WordFormProvider } from '../components/WordFormSheet';
@@ -11,9 +12,11 @@ export default function RootLayout() {
       <WordsProvider>
         <PhoneCanvas>
           <ToastProvider>
-            <WordFormProvider>
-              <Slot />
-            </WordFormProvider>
+            <AuthProvider>
+              <WordFormProvider>
+                <Slot />
+              </WordFormProvider>
+            </AuthProvider>
           </ToastProvider>
         </PhoneCanvas>
       </WordsProvider>
