@@ -12,7 +12,7 @@ const ITEMS: NavItem[] = [
   { label: '홈', icon: 'home', href: '/' },
   { label: '시험', icon: 'test', href: '/test' },
   { label: '추가', icon: 'add', href: '/add' },
-  { label: '내 정보', icon: 'account', href: '/account', also: ['/login', '/signup', '/class-code'] },
+  { label: '내 정보', icon: 'account', href: '/account', also: ['/login', '/signup'] },
 ];
 
 export function BottomNav() {
