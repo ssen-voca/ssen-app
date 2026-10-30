@@ -1,9 +1,9 @@
 import { blankDetails } from './normalize';
 import type { Word } from './types';
-import { chapterOptions, removeWord, upsertWord } from './wordList';
+import { chapterOptions, groupByChapter, orderedWords, removeWord, upsertWord } from './wordList';
 
 const make = (id: string, chapter = 'Day 1', text = id): Word => ({
-  id, word: text, meanings: ['뜻'], definitions: [''], chapter, details: blankDetails(),
+  id, word: text, meanings: ['뜻'], synonyms: [''], chapter, details: blankDetails(),
 });
 
 describe('upsertWord', () => {
@@ -39,5 +39,28 @@ describe('chapterOptions', () => {
 
   it('still offers Day 1 for an empty list', () => {
     expect(chapterOptions([])).toEqual(['Day 1']);
+  });
+});
+
+describe('groupByChapter', () => {
+  it('orders chapters numerically and keeps the stored order inside a chapter', () => {
+    const list = [make('a', 'Day 10'), make('b', 'Day 2'), make('c', 'Day 2'), make('d', 'Day 1')];
+    const groups = groupByChapter(list);
+    expect(groups.map((group) => group.chapter)).toEqual(['Day 1', 'Day 2', 'Day 10']);
+    expect(groups[1].words.map((word) => word.id)).toEqual(['b', 'c']);
+  });
+
+  it('returns no groups for an empty list and does not mutate the input', () => {
+    expect(groupByChapter([])).toEqual([]);
+    const list = [make('a', 'Day 2'), make('b', 'Day 1')];
+    groupByChapter(list);
+    expect(list.map((word) => word.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('orderedWords', () => {
+  it('flattens the chapter groups in display order', () => {
+    const list = [make('a', 'Day 10'), make('b', 'Day 2'), make('c', 'Day 2'), make('d', 'Day 1')];
+    expect(orderedWords(list).map((word) => word.id)).toEqual(['d', 'b', 'c', 'a']);
   });
 });

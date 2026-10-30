@@ -1,31 +1,22 @@
-import { alignDefinitions, blankDetails, splitMeanings } from './normalize';
+import { alignList, blankDetails, splitMeanings } from './normalize';
 import type { Word, WordDetails } from './types';
 
 export type FormValues = {
   word: string;
   chapter: string;
   meaning: string;
-  definition: string;
+  synonyms: string;
   example: string;
   exampleKo: string;
   exampleMeaning: string;
-  synonyms: string;
-  antonyms: string;
-  derived: string;
-  related: string;
 };
 
 export type BuildResult = { ok: true; word: Word } | { ok: false; message: string };
 
-const DETAIL_FIELDS: (keyof WordDetails)[] = [
-  'example', 'exampleKo', 'exampleMeaning', 'synonyms', 'antonyms', 'derived', 'related',
-];
+const DETAIL_FIELDS: (keyof WordDetails)[] = ['example', 'exampleKo', 'exampleMeaning'];
 
 export function emptyForm(chapter: string): FormValues {
-  return {
-    word: '', chapter, meaning: '', definition: '', example: '', exampleKo: '',
-    exampleMeaning: '', synonyms: '', antonyms: '', derived: '', related: '',
-  };
+  return { word: '', chapter, meaning: '', synonyms: '', example: '', exampleKo: '', exampleMeaning: '' };
 }
 
 export function formFromWord(word: Word): FormValues {
@@ -33,7 +24,7 @@ export function formFromWord(word: Word): FormValues {
     word: word.word,
     chapter: word.chapter,
     meaning: word.meanings.join('\n'),
-    definition: word.definitions.join('\n'),
+    synonyms: word.synonyms.join('\n'),
     ...word.details,
   };
 }
@@ -65,7 +56,8 @@ export function buildWord(values: FormValues, id: string, previous?: Word): Buil
       id,
       word,
       meanings,
-      definitions: alignDefinitions(meanings, values.definition.split(/\r?\n/)),
+      // 동의어는 뜻 순서대로 한 줄씩. 줄 수가 뜻보다 적으면 빈 칸으로 채우고 많으면 남는 줄은 버린다.
+      synonyms: alignList(meanings, values.synonyms.split(/\r?\n/)),
       chapter: values.chapter || 'Day 1',
       details,
     },

@@ -87,7 +87,7 @@ describe('prefs', () => {
   });
 
   it('round-trips through savePrefs', async () => {
-    const prefs = { ...DEFAULT_PREFS, maskDetails: true, activeChapter: 'Day 2' };
+    const prefs = { ...DEFAULT_PREFS, maskMeaning: false, activeChapter: 'Day 2' };
     await savePrefs(prefs);
     expect(await loadPrefs()).toEqual(prefs);
   });
@@ -95,5 +95,15 @@ describe('prefs', () => {
   it('does not throw when saving fails', async () => {
     jest.spyOn(AsyncStorage, 'setItem').mockRejectedValueOnce(new Error('quota'));
     await expect(savePrefs(DEFAULT_PREFS)).resolves.toBeUndefined();
+  });
+});
+
+describe('legacy prefs', () => {
+  it('ignores the removed maskDetails switch', async () => {
+    await AsyncStorage.setItem(
+      PREFS_KEY,
+      JSON.stringify({ maskWord: true, maskMeaning: false, maskDetails: true, activeChapter: 'Day 2' }),
+    );
+    expect(await loadPrefs()).toEqual({ maskWord: true, maskMeaning: false, activeChapter: 'Day 2' });
   });
 });

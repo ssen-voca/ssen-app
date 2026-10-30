@@ -1,9 +1,9 @@
-import { anyCardVisible, cardVisible, hasMask, isMasked, toggleAll, toggleCard, toggleField } from './mask';
+import { anyCardVisible, cardVisible, isMasked, toggleAll, toggleField } from './mask';
 import { SAMPLE_WORDS } from './samples';
 import type { ShownMap } from './types';
 
-const allOn = { maskWord: true, maskMeaning: true, maskDetails: true };
-const allOff = { maskWord: false, maskMeaning: false, maskDetails: false };
+const allOn = { maskWord: true, maskMeaning: true };
+const allOff = { maskWord: false, maskMeaning: false };
 const [cultivate, resilient] = SAMPLE_WORDS;
 
 describe('isMasked', () => {
@@ -12,11 +12,6 @@ describe('isMasked', () => {
     expect(isMasked(allOff, {}, cultivate.id, 'meaning')).toBe(false);
     const shown = toggleField({}, cultivate.id, 'meaning');
     expect(isMasked(allOn, shown, cultivate.id, 'meaning')).toBe(false);
-  });
-
-  it('ties the example word to the English-word switch', () => {
-    expect(isMasked({ ...allOff, maskWord: true }, {}, cultivate.id, 'exampleWord')).toBe(true);
-    expect(isMasked({ ...allOn, maskWord: false }, {}, cultivate.id, 'exampleWord')).toBe(false);
   });
 });
 
@@ -30,33 +25,22 @@ describe('toggleField', () => {
   });
 });
 
-describe('cards', () => {
-  it('reveals then re-hides every field of one card', () => {
-    const revealed = toggleCard(allOn, {}, cultivate);
-    expect(cardVisible(allOn, revealed, cultivate)).toBe(true);
-    expect(isMasked(allOn, revealed, cultivate.id, 'details')).toBe(false);
-    expect(cardVisible(allOn, toggleCard(allOn, revealed, cultivate), cultivate)).toBe(false);
+describe('rows', () => {
+  it('counts a row as visible once one of its switched-on fields is revealed', () => {
+    const shown = toggleField({}, cultivate.id, 'meaning');
+    expect(cardVisible(allOn, shown, cultivate)).toBe(true);
+    expect(cardVisible(allOn, {}, cultivate)).toBe(false);
   });
 
   it('ignores revealed fields whose switch is off', () => {
-    const shown = toggleField({}, cultivate.id, 'details');
+    const shown = toggleField({}, cultivate.id, 'meaning');
     expect(cardVisible({ ...allOff, maskWord: true }, shown, cultivate)).toBe(false);
   });
 
-  it('toggleAll hides everything when any card is visible, otherwise reveals everything', () => {
+  it('toggleAll reveals everything when nothing is visible, otherwise hides everything', () => {
     const words = [cultivate, resilient];
-    const all = toggleAll(allOn, {}, words);
-    expect(words.every((word) => cardVisible(allOn, all, word))).toBe(true);
-    const oneVisible = toggleCard(allOn, {}, cultivate);
-    expect(anyCardVisible(allOn, toggleAll(allOn, oneVisible, words), words)).toBe(false);
-  });
-});
-
-describe('hasMask', () => {
-  it('shows the reveal button only when something on the card can be hidden', () => {
-    expect(hasMask(allOff, true)).toBe(false);
-    expect(hasMask({ ...allOff, maskDetails: true }, false)).toBe(false);
-    expect(hasMask({ ...allOff, maskDetails: true }, true)).toBe(true);
-    expect(hasMask({ ...allOff, maskMeaning: true }, false)).toBe(true);
+    const revealed = toggleAll(allOn, {}, words);
+    expect(words.every((word) => cardVisible(allOn, revealed, word))).toBe(true);
+    expect(anyCardVisible(allOn, toggleAll(allOn, revealed, words), words)).toBe(false);
   });
 });

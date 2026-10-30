@@ -9,7 +9,7 @@ function legacy(overrides: Partial<Word['details']> = {}): Word {
     id: 'w1',
     word: 'insight',
     meanings: ['통찰력'],
-    definitions: [''],
+    synonyms: [''],
     chapter: 'Day 2',
     details: { ...blankDetails(), ...overrides },
   };
@@ -18,8 +18,7 @@ function legacy(overrides: Partial<Word['details']> = {}): Word {
 describe('emptyForm', () => {
   it('starts blank with the given chapter', () => {
     expect(emptyForm('Day 3')).toEqual({
-      word: '', chapter: 'Day 3', meaning: '', definition: '', example: '', exampleKo: '',
-      exampleMeaning: '', synonyms: '', antonyms: '', derived: '', related: '',
+      word: '', chapter: 'Day 3', meaning: '', synonyms: '', example: '', exampleKo: '', exampleMeaning: '',
     });
   });
 });
@@ -35,17 +34,14 @@ describe('buildWord', () => {
     const result = buildWord({ ...base, word: '  insight ', synonyms: ' vision ', chapter: '' }, 'n1');
     expect(result).toEqual({
       ok: true,
-      word: {
-        id: 'n1', word: 'insight', meanings: ['통찰력'], definitions: [''], chapter: 'Day 1',
-        details: { ...blankDetails(), synonyms: 'vision' },
-      },
+      word: { id: 'n1', word: 'insight', meanings: ['통찰력'], synonyms: ['vision'], chapter: 'Day 1', details: blankDetails() },
     });
   });
 
-  it('aligns multi-line definitions to the meanings', () => {
-    const result = buildWord({ ...base, meaning: '통찰력\n식견\n안목', definition: 'a\n\nc\nextra' }, 'n');
+  it('aligns multi-line synonyms to the meanings, one line per meaning', () => {
+    const result = buildWord({ ...base, meaning: '통찰력\n식견\n안목', synonyms: 'a, b\n\nc\nextra' }, 'n');
     expect(result.ok && result.word.meanings).toEqual(['통찰력', '식견', '안목']);
-    expect(result.ok && result.word.definitions).toEqual(['a', '', 'c']);
+    expect(result.ok && result.word.synonyms).toEqual(['a, b', '', 'c']);
   });
 
   it('requires English and Korean examples together when added', () => {
@@ -92,12 +88,12 @@ describe('buildWord', () => {
 describe('formFromWord', () => {
   it('round-trips through buildWord', () => {
     const word: Word = {
-      id: 'w9', word: 'insight', meanings: ['통찰력', '식견'], definitions: ['a', ''], chapter: 'Day 4',
-      details: { example: 'E.', exampleKo: '통찰력이 있다', exampleMeaning: '통찰력', synonyms: 's', antonyms: 'a', derived: 'd', related: 'r' },
+      id: 'w9', word: 'insight', meanings: ['통찰력', '식견'], synonyms: ['perception, vision', ''], chapter: 'Day 4',
+      details: { example: 'E.', exampleKo: '통찰력이 있다', exampleMeaning: '통찰력' },
     };
     const form = formFromWord(word);
     expect(form.meaning).toBe('통찰력\n식견');
-    expect(form.definition).toBe('a\n');
+    expect(form.synonyms).toBe('perception, vision\n');
     expect(buildWord(form, 'w9', word)).toEqual({ ok: true, word });
   });
 });

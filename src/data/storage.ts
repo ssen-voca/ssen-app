@@ -9,11 +9,10 @@ export const PREFS_KEY = 'pocket-vocab-prefs-v1';
 export const DEFAULT_PREFS: Prefs = {
   maskWord: false,
   maskMeaning: true,
-  maskDetails: false,
   activeChapter: 'all',
 };
 
-type MaskPrefKey = 'maskWord' | 'maskMeaning' | 'maskDetails';
+type MaskPrefKey = 'maskWord' | 'maskMeaning';
 
 type Read = { status: 'ok'; value: unknown } | { status: 'missing' } | { status: 'unreadable' };
 
@@ -63,7 +62,6 @@ export async function loadPrefs(): Promise<Prefs> {
   return {
     maskWord: flag('maskWord'),
     maskMeaning: flag('maskMeaning'),
-    maskDetails: flag('maskDetails'),
     activeChapter:
       typeof raw.activeChapter === 'string' && raw.activeChapter !== '' ? raw.activeChapter : DEFAULT_PREFS.activeChapter,
   };
