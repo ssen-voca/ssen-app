@@ -2039,3 +2039,48 @@ git add -A src
 git commit -m "chore: 개편 후 남은 죽은 코드와 안 쓰는 아이콘 정리 (#10)"
 ```
 (바뀐 파일이 없으면 커밋하지 않는다.)
+
+---
+
+### Task 7: 홈의 `오늘의 단어 학습` 박스 삭제
+
+(사용자 추가 요구 2026-10-30. 학습 진입은 하단 `학습` 탭과 줄 누르기로 충분하다.)
+
+**Files:**
+- Modify: `src/app/(main)/index.tsx`
+
+- [ ] **Step 1:** `오늘의 단어 학습` 박스(`<Pressable ... style={styles.launch}> ... </Pressable>` 블록 전체: 아이콘 `▤`, 제목 `오늘의 단어 학습`, 부제 `한 단어씩 넘기며 뜻과 예문 익히기`, 화살표 `→`)와 전용 스타일(`launch`, `launchIcon`, `launchIconText`, `launchBody`, `launchTitle`, `launchSub`, `launchArrow`)을 지운다. 이로써 안 쓰게 되는 import나 변수만 함께 지운다(`router`는 빈 상태 버튼이 쓰면 남긴다). 그 뒤 첫 카드(Day 선택·암기 모드)와 위쪽 히어로 사이의 간격이 어색하지 않은지 확인하고, 필요하면 카드의 위쪽 여백(`MaskPanel`의 `marginTop`)만 맞춘다. 다른 것은 바꾸지 않는다.
+- [ ] **Step 2:** `npm run typecheck && npm test` 통과, 브라우저에서 홈에 박스가 없고 히어로 → Day/암기 모드 카드 → 검색 → 목록 순서로 보이며 하단 `학습` 탭과 줄 누르기로 학습이 열리는지 확인한다(콘솔 오류는 8080 호출 제외 없음).
+- [ ] **Step 3:** 커밋 `git add -A src && git commit -m "feat: 홈의 오늘의 단어 학습 박스 삭제 (#10)"`
+
+### Task 8: 앱 전체 글꼴을 가독성 좋은 Pretendard로 변경
+
+(사용자 추가 요구 2026-10-30: "가독성이 좋은 폰트로 수정해줘. 전부".)
+
+**Files:**
+- Modify: `src/theme.ts`
+- Create or Modify: 웹 문서에 글꼴 CSS를 싣는 곳(아래 Step 2)
+
+**Interfaces:** `fonts.body`, `fonts.serif`(theme.ts). 모든 글자는 이미 `AppText`(`fonts.body`)와 `FormInput`/검색창(`fonts.body`), 표제어(`fonts.serif`)로 이 두 값을 거친다. 컴포넌트는 고치지 않는다.
+
+- [ ] **Step 1: 글꼴 스택** — `src/theme.ts`의 `fonts`를 다음으로 바꾼다.
+
+```ts
+// 한글 가독성이 좋은 Pretendard. 웹에서는 아래 CSS로 불러오고, 못 불러오면 시스템 한글 글꼴로 대체된다.
+const SANS_WEB =
+  '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Segoe UI", sans-serif';
+
+export const fonts = {
+  body: Platform.select({ web: SANS_WEB, default: undefined }),
+  // 표제어·제목도 같은 글꼴을 쓴다(예전 serif에서 변경). 값 이름은 그대로 두어 사용처를 바꾸지 않는다.
+  serif: Platform.select({ web: SANS_WEB, default: undefined }),
+};
+```
+
+- [ ] **Step 2: 웹에서 글꼴 불러오기** — 이 앱은 `app.json`에서 `web.output: "single"`이다. 다음 순서로 시도해 **되는 첫 방법**을 쓴다.
+  1. Expo Router의 `src/app/+html.tsx`(루트 HTML)를 만들어 `<head>`에 `<link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />`와 `<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />`를 싣는다. `single` 출력에서 실제로 반영되는지 `npm run build:web` 결과 `dist/index.html`에 두 링크가 들어갔는지로 확인한다. 안 들어가면 이 방법은 버린다(파일도 지운다).
+  2. 안 되면 웹에서만, 앱 시작 시 `document.head`에 위 두 `<link>`를 한 번 넣는 작은 함수(`src/theme.ts`가 아니라 `src/app/_layout.tsx` 최상단 effect 또는 모듈 초기화)를 쓴다. 중복 삽입을 막고(`id` 지정) `Platform.OS === 'web'`일 때만 실행한다.
+  어느 쪽이든 새 의존성(`expo-font` 등)은 추가하지 않는다. 테스트가 `document`가 없는 jest 환경에서 깨지지 않아야 한다.
+
+- [ ] **Step 3: 확인** — `npm run typecheck && npm test && npm run build:web`. 브라우저에서 홈·학습·시험·내 정보·단어 폼 시트·빈 상태 모두에서 글꼴이 Pretendard로 렌더되는지 확인한다: 페이지에서 `document.fonts`에 Pretendard가 로드됐는지, 대표 요소 몇 개(`getComputedStyle(el).fontFamily`: 히어로 제목, 단어 줄, 검색 입력, 학습 표제어, 하단 탭 라벨, 폼 입력)의 값이 Pretendard로 시작하는지, 그리고 스크린샷으로 한글/영문 모두 읽기 좋은지 본다. CDN을 못 불러오는 상황(오프라인)에서도 시스템 한글 글꼴로 정상 표시되는지 한 번 확인한다(네트워크 요청 차단이 어렵다면 보고서에 미확인으로 적는다). 글자 크기·자간·색은 바꾸지 않는다.
+- [ ] **Step 4: 커밋** `git add -A src && git commit -m "feat: 앱 전체 글꼴을 가독성 좋은 Pretendard로 변경 (#10)"`
