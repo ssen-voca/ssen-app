@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { colors } from '../../theme';
+import type { DayOption } from '../../data/wordList';
 import { AppText } from '../AppText';
 
-export type DayOption = { value: string; label: string; count: number };
 type Props = { options: DayOption[]; value: string; onChange: (value: string) => void };
 
 export function DayPicker({ options, value, onChange }: Props) {
@@ -26,27 +26,38 @@ export function DayPicker({ options, value, onChange }: Props) {
         </AppText>
       </Pressable>
       {open && (
-        <View style={styles.list}>
-          {options.map((option) => {
-            const selected = option.value === current.value;
-            return (
-              <Pressable
-                key={option.value}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => {
-                  setOpen(false);
-                  onChange(option.value);
-                }}
-                style={[styles.option, selected && styles.optionSelected]}
-              >
-                <AppText style={[styles.optionLabel, selected && styles.optionLabelSelected]}>{option.label}</AppText>
-                <AppText style={styles.optionCount}>{option.count}</AppText>
-              </Pressable>
-            );
-          })}
-        </View>
+        <DayOptionList
+          options={options}
+          current={current.value}
+          onChange={(next) => {
+            setOpen(false);
+            onChange(next);
+          }}
+        />
       )}
+    </View>
+  );
+}
+
+/** 펼친 Day 목록. 학습 화면은 칩으로 직접 펼치므로 따로 내보낸다. */
+export function DayOptionList({ options, current, onChange }: { options: DayOption[]; current: string; onChange: (value: string) => void }) {
+  return (
+    <View style={styles.list}>
+      {options.map((option) => {
+        const selected = option.value === current;
+        return (
+          <Pressable
+            key={option.value}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            onPress={() => onChange(option.value)}
+            style={[styles.option, selected && styles.optionSelected]}
+          >
+            <AppText style={[styles.optionLabel, selected && styles.optionLabelSelected]}>{option.label}</AppText>
+            <AppText style={styles.optionCount}>{option.count}</AppText>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }

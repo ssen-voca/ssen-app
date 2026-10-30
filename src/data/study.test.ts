@@ -110,12 +110,20 @@ describe('studyList', () => {
     const unknown = studyList(words, 'nope', 'all');
     expect(unknown.list).toHaveLength(4);
     expect(unknown.start).toBe(0);
-    expect(studyList([], undefined, 'all')).toEqual({ list: [], start: 0 });
+    expect(studyList([], undefined, 'all')).toEqual({ list: [], start: 0, scope: 'all' });
   });
 
   it('falls back to the active chapter for an unknown id', () => {
     const { list, start } = studyList(words, 'nope', 'Day 2');
     expect(list.map((word) => word.id)).toEqual(['a', 'c']);
     expect(start).toBe(0);
+  });
+
+  it('reports the scope: the word\'s Day, else the active chapter', () => {
+    expect(studyList(words, 'c', 'all').scope).toBe('Day 2');
+    expect(studyList(words, 'b', 'Day 2').scope).toBe('Day 1');
+    expect(studyList(words, undefined, 'Day 2').scope).toBe('Day 2');
+    expect(studyList(words, 'nope', 'Day 1').scope).toBe('Day 1');
+    expect(studyList(words, undefined, 'all').scope).toBe('all');
   });
 });

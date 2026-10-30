@@ -20,7 +20,7 @@ import { WordRow } from '../../components/wordbook/WordRow';
 import { searchWords, wordsInChapter } from '../../data/filter';
 import { anyCardVisible, toggleAll, toggleField } from '../../data/mask';
 import type { Word } from '../../data/types';
-import { effectiveChapter, groupByChapter } from '../../data/wordList';
+import { dayOptions, effectiveChapter, groupByChapter } from '../../data/wordList';
 import { useWords } from '../../data/WordsContext';
 import { colors, fonts } from '../../theme';
 
@@ -36,13 +36,7 @@ export default function WordbookScreen() {
   const { width } = useWindowDimensions();
   const chapter = effectiveChapter(words, prefs.activeChapter);
   const dayWords = useMemo(() => wordsInChapter(words, chapter), [words, chapter]);
-  const dayOptions = useMemo(
-    () => [
-      { value: 'all', label: '전체 Day', count: words.length },
-      ...groupByChapter(words).map((group) => ({ value: group.chapter, label: group.chapter, count: group.words.length })),
-    ],
-    [words],
-  );
+  const options = useMemo(() => dayOptions(words), [words]);
   const list = useMemo(() => searchWords(words, query, chapter), [words, query, chapter]);
   const groups = useMemo(() => groupByChapter(list), [list]);
 
@@ -80,7 +74,7 @@ export default function WordbookScreen() {
         onRevealAll={() => setShown(toggleAll(prefs, shown, dayWords))}
       >
         <DayPicker
-          options={dayOptions}
+          options={options}
           value={chapter}
           onChange={(value) => {
             if (value === chapter) return;

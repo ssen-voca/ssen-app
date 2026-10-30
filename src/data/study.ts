@@ -51,17 +51,18 @@ export function splitSynonyms(value: string): string[] {
 /**
  * 학습 목록과 시작 위치. 단어 id가 있으면 그 단어가 속한 Day의 목록에서 그 단어부터,
  * 없으면(또는 없는 id면) 전체(활성 챕터가 있으면 그 챕터)를 홈 목록과 같은 순서로 첫 단어부터.
+ * scope는 목록의 범위('all' 또는 Day 이름).
  */
 export function studyList(
   words: Word[],
   wordId: string | undefined,
   activeChapter: string,
-): { list: Word[]; start: number } {
+): { list: Word[]; start: number; scope: string } {
   const target = wordId === undefined ? undefined : words.find((word) => word.id === wordId);
   if (target) {
     const list = words.filter((word) => word.chapter === target.chapter);
-    return { list, start: list.findIndex((word) => word.id === target.id) };
+    return { list, start: list.findIndex((word) => word.id === target.id), scope: target.chapter };
   }
   const list = activeChapter === 'all' ? orderedWords(words) : wordsInChapter(words, activeChapter);
-  return { list, start: 0 };
+  return { list, start: 0, scope: activeChapter };
 }

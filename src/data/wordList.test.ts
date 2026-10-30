@@ -1,6 +1,6 @@
 import { blankDetails } from './normalize';
 import type { Word } from './types';
-import { chapterOptions, effectiveChapter, groupByChapter, orderedWords, removeWord, upsertWord } from './wordList';
+import { chapterOptions, dayOptions, effectiveChapter, groupByChapter, orderedWords, removeWord, upsertWord } from './wordList';
 
 const make = (id: string, chapter = 'Day 1', text = id): Word => ({
   id, word: text, meanings: ['뜻'], synonyms: [''], chapter, details: blankDetails(),
@@ -76,5 +76,20 @@ describe('effectiveChapter', () => {
   it('falls back to "all" when the saved chapter has no words left', () => {
     expect(effectiveChapter(list, 'Day 5')).toBe('all');
     expect(effectiveChapter([], 'Day 1')).toBe('all');
+  });
+});
+
+describe('dayOptions', () => {
+  it('starts with the all option, then each Day in numeric order with its count', () => {
+    const list = [make('a', 'Day 10'), make('b', 'Day 2'), make('c', 'Day 2')];
+    expect(dayOptions(list)).toEqual([
+      { value: 'all', label: '전체 Day', count: 3 },
+      { value: 'Day 2', label: 'Day 2', count: 2 },
+      { value: 'Day 10', label: 'Day 10', count: 1 },
+    ]);
+  });
+
+  it('has only the all option for an empty list', () => {
+    expect(dayOptions([])).toEqual([{ value: 'all', label: '전체 Day', count: 0 }]);
   });
 });

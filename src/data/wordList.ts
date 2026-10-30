@@ -1,6 +1,7 @@
 import type { Word } from './types';
 
 export type ChapterGroup = { chapter: string; words: Word[] };
+export type DayOption = { value: string; label: string; count: number };
 
 export function upsertWord(words: Word[], word: Word): Word[] {
   return words.some((item) => item.id === word.id)
@@ -42,4 +43,12 @@ export function orderedWords(words: Word[]): Word[] {
 /** 저장된 활성 챕터에 단어가 더 이상 없으면 전체('all')로 되돌린다. */
 export function effectiveChapter(words: Word[], active: string): string {
   return active === 'all' || words.some((word) => word.chapter === active) ? active : 'all';
+}
+
+/** Day 선택 목록: 전체 + Day별(숫자 순서) 단어 수. 홈과 학습 화면이 함께 쓴다. */
+export function dayOptions(words: Word[]): DayOption[] {
+  return [
+    { value: 'all', label: '전체 Day', count: words.length },
+    ...groupByChapter(words).map((group) => ({ value: group.chapter, label: group.chapter, count: group.words.length })),
+  ];
 }

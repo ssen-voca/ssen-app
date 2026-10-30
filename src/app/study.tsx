@@ -1,14 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '../components/AppText';
+import { DayOptionList } from '../components/wordbook/DayPicker';
 import { ExampleBlock } from '../components/study/ExampleBlock';
 import { MeaningRow } from '../components/study/MeaningRow';
 import { startStudy, studyList, studyReducer, swipeDirection, wheelStep } from '../data/study';
 import { useWords } from '../data/WordsContext';
-import { effectiveChapter } from '../data/wordList';
+import { dayOptions, effectiveChapter } from '../data/wordList';
 import { colors, fonts, isNarrow } from '../theme';
 
 const MOVE_HINT = '⇆  스크롤 · 좌우 밀기로 다음 단어';
@@ -33,18 +34,21 @@ function StudyEmpty() {
 }
 
 export default function StudyScreen() {
-  const { ready } = useWords();
+  const { ready, words, prefs } = useWords();
   const { word: wordParam } = useLocalSearchParams<{ word?: string | string[] }>();
   const wordId = typeof wordParam === 'string' ? wordParam : undefined;
   if (!ready) return <View style={styles.screen} />;
-  // 쿼리가 바뀌면 처음부터 다시 시작한다.
-  return <StudyBody key={wordId ?? 'all'} wordId={wordId} />;
+  // 쿼리나 학습 범위(Day)가 바뀌면 처음부터 다시 시작한다.
+  return <StudyBody key={`${wordId ?? 'all'}:${effectiveChapter(words, prefs.activeChapter)}`} wordId={wordId} />;
 }
 
 function StudyBody({ wordId }: { wordId?: string }) {
-  const { words, prefs } = useWords();
+  const { words, prefs, setPref, setShown } = useWords();
   const chapter = effectiveChapter(words, prefs.activeChapter);
-  const { list, start } = useMemo(() => studyList(words, wordId, chapter), [words, wordId, chapter]);
+  const { list, start, scope } = useMemo(() => studyList(words, wordId, chapter), [words, wordId, chapter]);
+  const options = useMemo(() => dayOptions(words), [words]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const scopeLabel = scope === 'all' ? '전체 Day' : scope;
   const total = list.length;
   const [state, dispatch] = useReducer(studyReducer, start, startStudy);
   const insets = useSafeAreaInsets();
@@ -113,6 +117,14 @@ function StudyBody({ wordId }: { wordId?: string }) {
     dispatch({ type: 'toggleTranslation' });
   };
 
+  const pickDay = (value: string) => {
+    setPickerOpen(false);
+    if (value === scope) return;
+    setShown({});
+    setPref('activeChapter', value);
+    if (wordId !== undefined) router.setParams({ word: undefined });
+  };
+
   const index = state.index >= total ? 0 : state.index;
   const word = list[index];
   const pad = width >= 621 ? 24 : 20;
@@ -133,16 +145,30 @@ function StudyBody({ wordId }: { wordId?: string }) {
           >
             <AppText style={styles.backText}>←</AppText>
           </Pressable>
-          <Pressable disabled accessibilityRole="button" accessibilityLabel="학습 챕터 선택 (준비 중)" style={styles.chapter}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`학습할 Day 선택: ${scopeLabel}`}
+            accessibilityState={{ expanded: pickerOpen }}
+            onPress={() => setPickerOpen(!pickerOpen)}
+            style={styles.chapter}
+          >
             <View style={styles.bookIcon}>
               <AppText style={styles.bookIconText}>▤</AppText>
             </View>
             <AppText numberOfLines={1} style={styles.chapterText}>
-              {word ? word.chapter : 'Daily vocabulary'}
+              {scopeLabel}
+            </AppText>
+            <AppText aria-hidden style={styles.chevron}>
+              {pickerOpen ? '▴' : '▾'}
             </AppText>
           </Pressable>
           <AppText style={styles.count}>{total ? `${index + 1} / ${total}` : '0 / 0'}</AppText>
         </View>
+        {pickerOpen && (
+          <View style={styles.picker}>
+            <DayOptionList options={options} current={scope} onChange={pickDay} />
+          </View>
+        )}
         <View style={styles.progress}>
           <View style={[styles.progressFill, { width: `${total ? ((index + 1) / total) * 100 : 0}%` }]} />
         </View>
@@ -222,6 +248,8 @@ const styles = StyleSheet.create({
   },
   bookIconText: { color: colors.accent, fontSize: 15 },
   chapterText: { flexShrink: 1, fontSize: 12 },
+  chevron: { color: colors.accent, fontSize: 13 },
+  picker: { marginTop: 10, borderWidth: 1, borderColor: colors.line, borderRadius: 14, overflow: 'hidden' },
   count: { color: '#6f7d77', fontSize: 12, fontWeight: '700' },
   progress: { height: 4, marginTop: 14, borderRadius: 5, overflow: 'hidden', backgroundColor: '#e7e5df' },
   progressFill: { height: 4, borderRadius: 5, backgroundColor: colors.accent },
