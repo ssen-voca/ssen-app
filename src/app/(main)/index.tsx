@@ -14,14 +14,14 @@ import { MainScroll } from '../../components/MainScroll';
 import { useToast } from '../../components/Toast';
 import { NOT_PERSISTED_MESSAGE, useWordForm } from '../../components/WordFormSheet';
 import { MaskPanel } from '../../components/wordbook/MaskPanel';
-import { WordCard } from '../../components/wordbook/WordCard';
+import { DaySection } from '../../components/wordbook/DaySection';
+import { WordRow } from '../../components/wordbook/WordRow';
 import { searchWords } from '../../data/filter';
-import { anyCardVisible, toggleAll, toggleCard, toggleField } from '../../data/mask';
+import { anyCardVisible, toggleAll, toggleField } from '../../data/mask';
 import type { Word } from '../../data/types';
+import { groupByChapter } from '../../data/wordList';
 import { useWords } from '../../data/WordsContext';
 import { colors, fonts, isNarrow } from '../../theme';
-
-type ViewMode = 'card' | 'list';
 
 function todayLabel(): string {
   return new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date());
@@ -32,9 +32,9 @@ export default function WordbookScreen() {
   const { open } = useWordForm();
   const toast = useToast();
   const [query, setQuery] = useState('');
-  const [view, setView] = useState<ViewMode>('card');
   const { width } = useWindowDimensions();
   const list = useMemo(() => searchWords(words, query, prefs.activeChapter), [words, query, prefs.activeChapter]);
+  const groups = useMemo(() => groupByChapter(list), [list]);
 
   if (!ready) {
     return <MainScroll>{null}</MainScroll>;
@@ -134,42 +134,25 @@ export default function WordbookScreen() {
             style={styles.searchInput}
           />
         </View>
-        <View accessibilityLabel="보기 방식" style={styles.toggle}>
-          {(['card', 'list'] as const).map((mode) => {
-            const active = view === mode;
-            return (
-              <Pressable
-                key={mode}
-                accessibilityRole="button"
-                accessibilityLabel={mode === 'card' ? '카드 보기' : '리스트 보기'}
-                accessibilityState={{ selected: active }}
-                onPress={() => setView(mode)}
-                style={[styles.toggleButton, active && styles.toggleButtonActive]}
-              >
-                <Icon name={mode === 'card' ? 'viewCard' : 'viewList'} size={19} color={active ? colors.accent : '#99a1ad'} />
-              </Pressable>
-            );
-          })}
-        </View>
       </View>
 
-      {list.length > 0 ? (
-        <View style={[styles.grid, view === 'list' && styles.gridList]}>
-          {list.map((word, i) => (
-            <WordCard
-              key={word.id}
-              word={word}
-              number={i + 1}
-              mode={view}
-              prefs={prefs}
-              shown={shown}
-              onToggleField={(field) => setShown(toggleField(shown, word.id, field))}
-              onToggleCard={() => setShown(toggleCard(prefs, shown, word))}
-              onEdit={() => open(word.id)}
-              onDelete={() => remove(word)}
-            />
-          ))}
-        </View>
+      {groups.length > 0 ? (
+        groups.map((group) => (
+          <DaySection key={group.chapter} chapter={group.chapter} count={group.words.length}>
+            {group.words.map((word) => (
+              <WordRow
+                key={word.id}
+                word={word}
+                prefs={prefs}
+                shown={shown}
+                onToggleField={(field) => setShown(toggleField(shown, word.id, field))}
+                onOpen={() => router.navigate({ pathname: '/study', params: { word: word.id } })}
+                onEdit={() => open(word.id)}
+                onDelete={() => remove(word)}
+              />
+            ))}
+          </DaySection>
+        ))
       ) : (
         <View style={styles.empty}>
           <View style={styles.emptyIcon}>
@@ -296,11 +279,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   searchInput: { flex: 1, minWidth: 0, fontSize: 14, fontFamily: fonts.body, color: colors.text },
-  toggle: { height: 48, padding: 4, flexDirection: 'row', borderRadius: 15, backgroundColor: '#ebe8e1' },
-  toggleButton: { width: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  toggleButtonActive: { backgroundColor: colors.surface, boxShadow: '0 2px 8px rgba(25, 40, 64, 0.1)' },
-  grid: { gap: 11 },
-  gridList: { gap: 8 },
   empty: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 20 },
   emptyIcon: {
     width: 64,

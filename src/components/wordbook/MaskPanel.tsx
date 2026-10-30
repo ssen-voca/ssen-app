@@ -6,7 +6,6 @@ import { AppText } from '../AppText';
 const SWITCHES = [
   { key: 'maskWord', label: '영어 가리기' },
   { key: 'maskMeaning', label: '뜻 가리기' },
-  { key: 'maskDetails', label: '추가정보 가리기' },
 ] as const;
 
 export type MaskKey = (typeof SWITCHES)[number]['key'];
