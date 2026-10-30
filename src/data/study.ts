@@ -1,15 +1,16 @@
-export type StudyPanel = 'definition' | 'example';
+import { wordsInChapter } from './filter';
+import type { Word } from './types';
+import { orderedWords } from './wordList';
 
-export type StudyState = { index: number; revealed: boolean; selected: number; panel: StudyPanel };
+export type StudyState = { index: number; translationOpen: boolean };
 
-export type StudyAction =
-  | { type: 'move'; step: number; length: number }
-  | { type: 'toggleCard' }
-  | { type: 'selectMeaning'; meaning: number }
-  | { type: 'togglePanel' }
-  | { type: 'setPanel'; panel: StudyPanel };
+export type StudyAction = { type: 'move'; step: number; length: number } | { type: 'toggleTranslation' };
 
-export const initialStudy: StudyState = { index: 0, revealed: false, selected: -1, panel: 'definition' };
+export const initialStudy: StudyState = { index: 0, translationOpen: false };
+
+export function startStudy(index: number): StudyState {
+  return { ...initialStudy, index: Math.max(0, index) };
+}
 
 export function studyReducer(state: StudyState, action: StudyAction): StudyState {
   switch (action.type) {
@@ -18,16 +19,8 @@ export function studyReducer(state: StudyState, action: StudyAction): StudyState
       const current = state.index >= action.length ? 0 : state.index;
       return { ...initialStudy, index: (current + action.step + action.length) % action.length };
     }
-    case 'toggleCard':
-      return state.revealed
-        ? { ...state, revealed: false, selected: -1, panel: 'definition' }
-        : { ...state, revealed: true };
-    case 'selectMeaning':
-      return { ...state, selected: state.selected === action.meaning ? -1 : action.meaning, panel: 'definition' };
-    case 'togglePanel':
-      return { ...state, panel: state.panel === 'definition' ? 'example' : 'definition' };
-    case 'setPanel':
-      return { ...state, panel: action.panel };
+    case 'toggleTranslation':
+      return { ...state, translationOpen: !state.translationOpen };
   }
 }
 
@@ -36,34 +29,39 @@ export function swipeDirection(dx: number, dy: number): -1 | 0 | 1 {
   return 0;
 }
 
-export function registerTap(lastTap: number, now: number): { toggle: boolean; lastTap: number } {
-  return now - lastTap < 360 ? { toggle: true, lastTap: 0 } : { toggle: false, lastTap: now };
-}
+type WheelInput = { deltaY: number; locked: boolean; length: number; now: number; lastWheel: number };
 
-export function isKeyboardPress(event: unknown): boolean {
-  if (!event || typeof event !== 'object') return false;
-  const e = event as { type?: unknown; detail?: unknown; nativeEvent?: { type?: unknown; detail?: unknown } };
-  const isKey = [e.type, e.nativeEvent?.type].some((type) => type === 'keyup' || type === 'keydown');
-  // Enter/Space on a native <button> arrives as a synthetic click with detail 0
-  const isKeyClick = [e, e.nativeEvent].some((x) => x?.type === 'click' && x.detail === 0);
-  return isKey || isKeyClick;
-}
-
-type WheelInput = { deltaY: number; revealed: boolean; length: number; now: number; lastWheel: number };
-
-export function wheelStep({ deltaY, revealed, length, now, lastWheel }: WheelInput): {
+export function wheelStep({ deltaY, locked, length, now, lastWheel }: WheelInput): {
   consume: boolean;
   step: -1 | 0 | 1;
   lastWheel: number;
 } {
-  if (revealed || length < 2 || Math.abs(deltaY) < 15) return { consume: false, step: 0, lastWheel };
+  if (locked || length < 2 || Math.abs(deltaY) < 15) return { consume: false, step: 0, lastWheel };
   if (now - lastWheel < 450) return { consume: true, step: 0, lastWheel };
   return { consume: true, step: deltaY > 0 ? 1 : -1, lastWheel: now };
 }
 
-export function splitChips(value: string): string[] {
+export function splitSynonyms(value: string): string[] {
   return value
     .split(/[,;]+/)
     .map((chip) => chip.trim())
     .filter(Boolean);
+}
+
+/**
+ * 학습 목록과 시작 위치. 단어 id가 있으면 그 단어가 속한 Day의 목록에서 그 단어부터,
+ * 없으면(또는 없는 id면) 전체(활성 챕터가 있으면 그 챕터)를 홈 목록과 같은 순서로 첫 단어부터.
+ */
+export function studyList(
+  words: Word[],
+  wordId: string | undefined,
+  activeChapter: string,
+): { list: Word[]; start: number } {
+  const target = wordId === undefined ? undefined : words.find((word) => word.id === wordId);
+  if (target) {
+    const list = words.filter((word) => word.chapter === target.chapter);
+    return { list, start: list.findIndex((word) => word.id === target.id) };
+  }
+  const list = activeChapter === 'all' ? orderedWords(words) : wordsInChapter(words, activeChapter);
+  return { list, start: 0 };
 }
