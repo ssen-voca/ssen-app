@@ -1,4 +1,4 @@
-import { digitsOnly, validateName, validatePhoneLast4 } from './validate';
+import { digitsOnly, normalizeClassCode, validateClassCode, validateName, validatePhoneLast4 } from './validate';
 
 describe('validateName', () => {
   it('accepts normal names, including 50 characters', () => {
@@ -37,5 +37,25 @@ describe('digitsOnly', () => {
   it('honours a custom max', () => {
     expect(digitsOnly('123456', 6)).toBe('123456');
     expect(digitsOnly('123456', 2)).toBe('12');
+  });
+});
+
+describe('normalizeClassCode', () => {
+  it('upper-cases and keeps only letters and digits, up to 6 characters', () => {
+    expect(normalizeClassCode('abc234')).toBe('ABC234');
+    expect(normalizeClassCode('  abc 234 ')).toBe('ABC234');
+    expect(normalizeClassCode('abc-234-xyz')).toBe('ABC234');
+    expect(normalizeClassCode('가나다')).toBe('');
+  });
+});
+
+describe('validateClassCode', () => {
+  it('accepts six characters from the code alphabet', () => {
+    expect(validateClassCode('ABC234')).toBeNull();
+    expect(validateClassCode('ZZZZZZ')).toBeNull();
+  });
+
+  it.each(['', 'ABC23', 'ABC2345', 'abc234', 'I0O1L1', 'ABC 23', '가나다라마바'])('rejects %j', (value) => {
+    expect(validateClassCode(value)).toBe('참여 코드 6자리를 입력해 주세요');
   });
 });

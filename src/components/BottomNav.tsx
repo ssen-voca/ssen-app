@@ -11,7 +11,7 @@ const ITEMS: NavItem[] = [
   { label: '홈', icon: 'home', href: '/' },
   { label: '학습', icon: 'study', href: '/study' },
   { label: '시험', icon: 'test', href: '/test' },
-  { label: '내 정보', icon: 'account', href: '/account', also: ['/login', '/signup', '/class-code'] },
+  { label: '내 정보', icon: 'account', href: '/account', also: ['/login', '/signup'] },
 ];
 
 export function BottomNav() {

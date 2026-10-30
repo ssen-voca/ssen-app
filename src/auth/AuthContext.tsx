@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as authApi from '../api/auth';
-import type { User } from '../api/auth';
+import type { Credentials, User } from '../api/auth';
 import { session, SessionExpiredError } from './session';
 
 export type AuthStatus = 'loading' | 'anonymous' | 'authenticated' | 'unreachable';
@@ -8,11 +8,9 @@ export type AuthStatus = 'loading' | 'anonymous' | 'authenticated' | 'unreachabl
 type AuthContextValue = {
   status: AuthStatus;
   user: User | null;
-  signup: (name: string, phoneLast4: string) => Promise<void>;
-  login: (name: string, phoneLast4: string) => Promise<void>;
+  signup: (credentials: Credentials) => Promise<void>;
+  login: (credentials: Credentials) => Promise<void>;
   logout: () => Promise<void>;
-  /** 저장해서 반영했으면 true, 그 사이 로그아웃·재로그인으로 밀렸으면 false (호출한 쪽은 조용히 끝낸다). */
-  saveClassCode: (classCode: string) => Promise<boolean>;
   retry: () => void;
 };
 
@@ -22,7 +20,6 @@ const AuthContext = createContext<AuthContextValue>({
   signup: async () => {},
   login: async () => {},
   logout: async () => {},
-  saveClassCode: async () => false,
   retry: () => {},
 });
 
@@ -76,8 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [apply],
   );
 
-  const signup = useCallback((name: string, phoneLast4: string) => enter(() => authApi.signup(name, phoneLast4)), [enter]);
-  const login = useCallback((name: string, phoneLast4: string) => enter(() => authApi.login(name, phoneLast4)), [enter]);
+  const signup = useCallback((credentials: Credentials) => enter(() => authApi.signup(credentials)), [enter]);
+  const login = useCallback((credentials: Credentials) => enter(() => authApi.login(credentials)), [enter]);
 
   const logout = useCallback(async () => {
     epoch.current++;
@@ -85,34 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await session.clear();
   }, [apply]);
 
-  const saveClassCode = useCallback(
-    async (classCode: string): Promise<boolean> => {
-      const mine = epoch.current;
-      try {
-        const user = await session.call((token) => authApi.setClassCode(token, classCode));
-        if (epoch.current !== mine) return false;
-        apply('authenticated', user);
-        return true;
-      } catch (error) {
-        if (epoch.current !== mine) return false;
-        if (error instanceof SessionExpiredError) {
-          epoch.current++;
-          apply('anonymous');
-        }
-        throw error;
-      }
-    },
-    [apply],
-  );
-
   const retry = useCallback(() => {
     apply('loading');
     void boot();
   }, [apply, boot]);
 
   const value = useMemo(
-    () => ({ ...state, signup, login, logout, saveClassCode, retry }),
-    [state, signup, login, logout, saveClassCode, retry],
+    () => ({ ...state, signup, login, logout, retry }),
+    [state, signup, login, logout, retry],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
