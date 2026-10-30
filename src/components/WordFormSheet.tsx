@@ -17,7 +17,7 @@ import type { Word } from '../data/types';
 import { buildWord, emptyForm, formFromWord, type FormValues } from '../data/wordForm';
 import { chapterOptions } from '../data/wordList';
 import { useWords } from '../data/WordsContext';
-import { CANVAS, colors, isNarrow } from '../theme';
+import { CANVAS, colors, fonts, isNarrow } from '../theme';
 import { AppText } from './AppText';
 import { Field, FormButton, FormInput, formStyles } from './FormControls';
 import { useToast } from './Toast';
@@ -144,6 +144,7 @@ const WEB_SELECT = {
   borderRadius: 14,
   background: '#fafbfc',
   color: colors.text,
+  fontFamily: fonts.body,
   fontSize: 14,
   outline: 'none',
   transition: '.2s',
