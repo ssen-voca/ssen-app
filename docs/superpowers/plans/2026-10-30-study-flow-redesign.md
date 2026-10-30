@@ -20,6 +20,7 @@
 - 꾹 누르기: `Pressable`의 `onPressIn`/`onPressOut`으로 누르는 동안만 보이게 한다. 글자 선택·길게 누르기 메뉴가 뜨지 않게 한다(`userSelect: 'none'`, 웹 `contextmenu` 취소).
 - 새 화면의 시각 값은 기존 화면의 값(원본 프로토타입에서 옮긴 값)을 재사용한다. 임의로 새 색·크기를 만들지 않는다.
 - 커밋 메시지에 **AI attribution을 넣지 않는다**(`Co-Authored-By:`, `Generated with`, 로봇 이모지). 이 조직의 `AGENTS.md`와 GitHub Ruleset이 막는다. 커밋 제목은 한국어 `feat: ... (#10)`.
+- 2026-10-30 추가 요구(사용자): 하단 탭 순서 `홈, 학습, 시험, 내 정보`(추가 탭 삭제), 홈의 `단어 추가`·`내 정보` 박스 삭제, Day 선택 드롭박스를 만들고 암기 모드를 그 카드 안으로 옮긴다, 영어/뜻 가리기는 선택한 Day 안에서 일관되게 적용. 단어 추가는 관리자 + 엑셀 업로드 전용이 될 예정이라 이번 범위에서는 탭·홈 진입점만 숨기고(라우트 `/add`와 폼 코드는 그대로 둔다), 관리자 권한 판별과 엑셀 업로드는 만들지 않는다. → Task 5.
 - 범위 밖: 서버 연동, 교사 업로드, 챕터 관리, 나만의 단어장, 네이티브 확인, 키보드 화살표 넘기기.
 
 ## Review Focus
@@ -31,6 +32,7 @@
 5. **뜻이 많아 화면보다 길어지는 단어**: 마우스 휠이 스크롤을 가로채 단어를 넘기지 않는다. → Task 4 브라우저 확인.
 6. **마우스 드래그로 넘긴 직후의 클릭**이 예문 토글로 새지 않는다. → Task 4 브라우저 확인.
 7. **홈 줄의 눌림 구분**: 가려진 영단어·뜻을 누르면 그 부분만 보이고 이동하지 않으며, 가려지지 않은 부분을 누르면 학습으로 이동한다. → Task 3 브라우저 확인.
+8. **Day 선택**: 선택한 Day가 삭제되어 사라졌을 때 `전체`로 되돌아오고, Day를 바꾸면 이전 Day에서 펼쳐 둔 정답이 새 Day에 남지 않으며, `전체 정답 보기`가 선택한 Day의 단어에만 적용된다. → Task 5.
 
 ---
 
@@ -1818,7 +1820,198 @@ git commit -m "feat: 학습 화면을 뜻 꾹 누르기 동의어와 마지막 �
 
 ---
 
-### Task 5: 정리와 최종 확인
+### Task 5: 하단 탭 정리, 홈 Day 선택 드롭박스와 암기 모드 통합
+
+**Files:**
+- Modify: `src/components/BottomNav.tsx`, `src/app/(main)/index.tsx`, `src/components/wordbook/MaskPanel.tsx`, `src/data/wordList.ts`
+- Create: `src/components/wordbook/DayPicker.tsx`
+- Test: `src/data/wordList.test.ts`(추가)
+
+**Interfaces:**
+- Consumes: `groupByChapter`, `wordsInChapter`, `toggleAll`, `anyCardVisible`, `useWords().setPref/setShown` (Task 1·3)
+- Produces: `effectiveChapter(words, active): string`(wordList.ts), `DayPicker({ options: { value: string; label: string; count: number }[]; value: string; onChange })`, `MaskPanel`에 선택적 `children`(패널 맨 위에 그려진다)
+
+기존 화면의 시각 값(패널 `#e9f1ec`, 스위치, 카드 그림자 등)을 재사용하고 새 색·크기를 만들지 않는다. 드롭박스는 열린 목록을 카드 안에서 아래로 펼친다(떠 있는 팝오버 금지: ScrollView 안에서 잘림·겹침이 생긴다). 항목 버튼 안에 버튼을 넣지 않는다.
+
+- [ ] **Step 1: 실패하는 테스트** — `src/data/wordList.test.ts` 맨 아래에 추가(`effectiveChapter`도 import에 더한다)
+
+```ts
+describe('effectiveChapter', () => {
+  const list = [make('a', 'Day 1'), make('b', 'Day 2')];
+
+  it('keeps "all" and chapters that still exist', () => {
+    expect(effectiveChapter(list, 'all')).toBe('all');
+    expect(effectiveChapter(list, 'Day 2')).toBe('Day 2');
+  });
+
+  it('falls back to "all" when the saved chapter has no words left', () => {
+    expect(effectiveChapter(list, 'Day 5')).toBe('all');
+    expect(effectiveChapter([], 'Day 1')).toBe('all');
+  });
+});
+```
+
+Run: `npx jest src/data/wordList.test.ts` → FAIL (`effectiveChapter` 없음).
+
+- [ ] **Step 2: 구현** — `src/data/wordList.ts` 맨 아래에 추가
+
+```ts
+/** 저장된 활성 챕터에 단어가 더 이상 없으면 전체('all')로 되돌린다. */
+export function effectiveChapter(words: Word[], active: string): string {
+  return active === 'all' || words.some((word) => word.chapter === active) ? active : 'all';
+}
+```
+
+Run: `npx jest src/data/wordList.test.ts` → PASS.
+
+- [ ] **Step 3: 하단 탭** — `src/components/BottomNav.tsx`
+  - `NavItem.href` 유니온에서 `'/add'`를 뺀다.
+  - `ITEMS`를 이 순서로 바꾼다: `홈`(icon `home`, `/`), `학습`(icon `study`, `/study`), `시험`(icon `test`, `/test`), `내 정보`(icon `account`, `/account`, `also: ['/login', '/signup', '/class-code']`). `추가` 항목은 지운다.
+  - 이 앱에는 아직 관리자 구분이 없으므로 `/add` 화면과 `WordFormSheet`는 그대로 둔다(탭과 홈 진입점만 없앤다).
+
+- [ ] **Step 4: MaskPanel에 children** — `src/components/wordbook/MaskPanel.tsx`
+  `Props`에 `children?: ReactNode`(`import type { ReactNode } from 'react'`)를 더하고, 패널 `View` 안 맨 앞(heading 위)에 `{children ? <View style={styles.slot}>{children}</View> : null}`를 그린다. 스타일 `slot: { marginBottom: 15 }`. 나머지는 그대로.
+
+- [ ] **Step 5: DayPicker 작성** — `src/components/wordbook/DayPicker.tsx`
+
+```tsx
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { colors } from '../../theme';
+import { AppText } from '../AppText';
+
+export type DayOption = { value: string; label: string; count: number };
+type Props = { options: DayOption[]; value: string; onChange: (value: string) => void };
+
+export function DayPicker({ options, value, onChange }: Props) {
+  const [open, setOpen] = useState(false);
+  const current = options.find((option) => option.value === value) ?? options[0];
+
+  return (
+    <View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Day 선택: ${current.label}`}
+        accessibilityState={{ expanded: open }}
+        onPress={() => setOpen(!open)}
+        style={styles.trigger}
+      >
+        <AppText style={styles.triggerLabel}>{current.label}</AppText>
+        <AppText style={styles.triggerCount}>{current.count}단어</AppText>
+        <AppText aria-hidden style={styles.chevron}>
+          {open ? '▴' : '▾'}
+        </AppText>
+      </Pressable>
+      {open && (
+        <View style={styles.list}>
+          {options.map((option) => {
+            const selected = option.value === current.value;
+            return (
+              <Pressable
+                key={option.value}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => {
+                  setOpen(false);
+                  onChange(option.value);
+                }}
+                style={[styles.option, selected && styles.optionSelected]}
+              >
+                <AppText style={[styles.optionLabel, selected && styles.optionLabelSelected]}>{option.label}</AppText>
+                <AppText style={styles.optionCount}>{option.count}</AppText>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  trigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+  },
+  triggerLabel: { flex: 1, fontSize: 15, fontWeight: '700' },
+  triggerCount: { color: colors.muted, fontSize: 11 },
+  chevron: { color: colors.accent, fontSize: 13 },
+  list: { marginTop: 6, borderRadius: 14, overflow: 'hidden', backgroundColor: colors.surface },
+  option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, paddingHorizontal: 14 },
+  optionSelected: { backgroundColor: colors.accentSoft },
+  optionLabel: { flex: 1, fontSize: 14 },
+  optionLabelSelected: { color: colors.accent, fontWeight: '800' },
+  optionCount: { color: colors.muted, fontSize: 11 },
+});
+```
+
+- [ ] **Step 6: 홈 화면** — `src/app/(main)/index.tsx`
+  1. `단어 추가`·`내 정보` 두 카드를 담은 `<View style={styles.actions}> ... </View>` 블록 전체와 그 전용 스타일(`actions`, `actionCard`, `actionCardNarrow`, `actionPrimary`, `actionPrimaryHover`, `actionIcon`, `actionIconNarrow`, `actionIconPrimary`, `actionIconText`, `actionBody`, `actionTitle`, `actionTitleNarrow`, `actionSub`, `actionSubNarrow`, `onPrimary`, `onPrimarySub`)를 지운다. 이로써 안 쓰게 되는 import(`PressableStateCallbackType`, `isNarrow`와 `narrow` 변수 등)도 지운다. `오늘의 단어 학습` 버튼, 검색, 목록은 그대로 둔다.
+  2. 선택한 Day를 계산한다. `useWords()`에서 `setPref`, `setShown`을 이미 가져온다.
+     ```tsx
+     const chapter = effectiveChapter(words, prefs.activeChapter);
+     const dayWords = useMemo(() => wordsInChapter(words, chapter), [words, chapter]);
+     const dayOptions = useMemo(
+       () => [
+         { value: 'all', label: '전체 Day', count: words.length },
+         ...groupByChapter(words).map((group) => ({ value: group.chapter, label: group.chapter, count: group.words.length })),
+       ],
+       [words],
+     );
+     ```
+     `list`는 `searchWords(words, query, chapter)`로 바꾼다(`prefs.activeChapter` 대신 `chapter`).
+  3. `MaskPanel` 사용부를 다음처럼 바꾼다(Day 선택 드롭박스가 같은 카드 맨 위로 들어간다). `전체 정답 보기`는 **선택한 Day의 단어**(`dayWords`)에만 적용한다.
+     ```tsx
+     <MaskPanel
+       prefs={prefs}
+       anyVisible={anyCardVisible(prefs, shown, dayWords)}
+       onToggle={(key) => setPref(key, !prefs[key])}
+       onRevealAll={() => setShown(toggleAll(prefs, shown, dayWords))}
+     >
+       <DayPicker
+         options={dayOptions}
+         value={chapter}
+         onChange={(value) => {
+           setShown({});
+           setPref('activeChapter', value);
+         }}
+       />
+     </MaskPanel>
+     ```
+     Day를 바꾸면 `setShown({})`으로 펼쳐 둔 정답을 모두 지워, 새 Day의 모든 줄이 같은 상태(스위치대로 가려진 상태)에서 시작하게 한다. 가리기 스위치는 지금처럼 전역 설정이며 모든 Day에 똑같이 적용된다(스위치를 바꾸면 `setPref`가 펼침 상태를 이미 초기화한다).
+  4. import에 `DayPicker`, `effectiveChapter`, `wordsInChapter`를 더한다.
+
+- [ ] **Step 7: 정적 확인**
+
+Run: `npm run typecheck 2>&1 | grep -E "BottomNav|DayPicker|MaskPanel|wordList|app/\(main\)/index" || echo "task5 files OK"`
+Expected: `task5 files OK` (Task 4가 먼저 끝나 있으면 `npm run typecheck`가 통째로 통과해야 한다).
+Run: `npm test` → 전부 통과.
+
+- [ ] **Step 8: 브라우저 확인** (`npx expo start --web --port 8099`, 끝나면 끈다)
+  - 하단 바가 `홈, 학습, 시험, 내 정보` 4개 순서이고 `추가` 탭이 없다. 각 탭이 이동하고 현재 탭이 강조된다.
+  - 홈에 `단어 추가`·`내 정보` 박스가 없다. `오늘의 단어 학습` 버튼 아래에 연두 카드 하나가 있고 맨 위가 Day 드롭박스, 그 아래가 `암기 모드`(스위치 2개, `전체 정답 보기`)다.
+  - 드롭박스를 누르면 `전체 Day`, `Day 1`, `Day 2`가 단어 수와 함께 펼쳐지고, 고르면 닫히며 목록에는 그 Day의 섹션만 보인다. `전체 Day`를 고르면 모두 보인다.
+  - Day 1에서 뜻 가리기를 켜고 한 줄의 뜻을 눌러 펼친 뒤 Day 2로 바꿨다가 Day 1로 돌아오면 펼침이 지워져 모든 줄이 똑같이 가려져 있다. 영어 가리기·뜻 가리기는 어느 Day에서든 모든 줄에 똑같이 적용된다.
+  - `전체 정답 보기`가 선택한 Day의 줄만 펼치고(다른 Day로 바꿔 보면 그쪽은 가려져 있다), 다시 누르면 그 Day만 다시 가린다.
+  - 하단 `학습` 탭: Day 2를 선택한 상태에서 열면 Day 2 단어만 학습 목록으로 나온다(`2 / 1` 같은 개수 확인, Task 4가 끝나 있어야 한다. 아직이면 이 줄은 Task 6에서 확인한다고 보고서에 적는다).
+  - 선택한 Day의 단어를 모두 삭제한 뒤 새로고침하면 `전체 Day`로 돌아온다.
+  - 390px 폭에서 드롭박스·카드가 깨지지 않는다. 콘솔 오류 없음(로컬 백엔드 8080 호출 오류는 무시).
+
+- [ ] **Step 9: 커밋**
+
+```bash
+git add -A src
+git commit -m "feat: 하단 탭 순서를 바꾸고 홈에서 Day 선택과 암기 모드를 한 카드로 묶기 (#10)"
+```
+
+---
+
+### Task 6: 정리와 최종 확인
 
 **Files:**
 - Modify: 남은 죽은 코드가 있는 파일(아래 grep 결과에 따라)
