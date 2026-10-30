@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { Credentials } from '../api/auth';
 import { ApiError } from '../api/client';
-import { digitsOnly, normalizeClassCode, validateClassCode, validateName, validatePhoneLast4 } from '../auth/validate';
+import { digitsOnly, validateName, validatePhoneLast4, validateSchool } from '../auth/validate';
 import { colors } from '../theme';
 import { AppText } from './AppText';
 import { Field, FormButton, FormError, FormInput } from './FormControls';
@@ -16,7 +16,7 @@ type Props = {
 };
 
 export function CredentialsForm({ submitLabel, onSubmit, linkLabel, linkHref }: Props) {
-  const [classCode, setClassCode] = useState('');
+  const [school, setSchool] = useState('');
   const [name, setName] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
@@ -33,7 +33,7 @@ export function CredentialsForm({ submitLabel, onSubmit, linkLabel, linkHref }: 
 
   const submit = async () => {
     if (busy.current) return;
-    const invalid = validateClassCode(classCode) ?? validateName(name) ?? validatePhoneLast4(pin);
+    const invalid = validateSchool(school) ?? validateName(name) ?? validatePhoneLast4(pin);
     if (invalid) {
       setError(invalid);
       return;
@@ -42,7 +42,7 @@ export function CredentialsForm({ submitLabel, onSubmit, linkLabel, linkHref }: 
     setPending(true);
     setError('');
     try {
-      await onSubmit({ classCode, name, phoneLast4: pin });
+      await onSubmit({ school, name, phoneLast4: pin });
     } catch (e) {
       if (mounted.current) setError(e instanceof ApiError ? e.message : '요청에 실패했어요');
     } finally {
@@ -54,15 +54,8 @@ export function CredentialsForm({ submitLabel, onSubmit, linkLabel, linkHref }: 
   return (
     <View>
       <View style={styles.fields}>
-        <Field label="참여 코드">
-          <FormInput
-            label="참여 코드"
-            value={classCode}
-            onChangeText={(value) => setClassCode(normalizeClassCode(value))}
-            onSubmit={submit}
-            placeholder="예: ABC234"
-            autoCapitalize="characters"
-          />
+        <Field label="학교">
+          <FormInput label="학교" value={school} onChangeText={setSchool} onSubmit={submit} placeholder="예: 동국대부속고" />
         </Field>
         <Field label="이름">
           <FormInput label="이름" value={name} onChangeText={setName} onSubmit={submit} placeholder="예: 김민준" />

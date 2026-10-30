@@ -6,8 +6,8 @@ jest.mock('./client', () => ({ ...jest.requireActual('./client'), request: jest.
 const mockRequest = request as jest.MockedFunction<typeof request>;
 const BAD = '서버 응답이 올바르지 않아요';
 const CLASSROOM = { id: 3, name: '겨울 특강 A반', code: 'ABC234' };
-const USER = { id: 1, name: '김', role: 'STUDENT', email: null, classroom: CLASSROOM };
-const CREDENTIALS = { classCode: 'ABC234', name: '김', phoneLast4: '1234' };
+const USER = { id: 1, name: '김', role: 'STUDENT', email: null, school: '동국대부속고', classroom: CLASSROOM };
+const CREDENTIALS = { school: '동국대부속고', name: '김', phoneLast4: '1234' };
 
 async function expectBad(pending: Promise<unknown>) {
   const error = await pending.catch((e: unknown) => e as ApiError);
@@ -19,7 +19,7 @@ async function expectBad(pending: Promise<unknown>) {
 beforeEach(() => mockRequest.mockReset());
 
 describe('auth api requests', () => {
-  it('sends the class code, name and last four digits to signup and login', async () => {
+  it('sends the school, name and last four digits to signup and login', async () => {
     mockRequest.mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
 
     await signup(CREDENTIALS);
@@ -45,8 +45,13 @@ describe('auth api response shapes', () => {
   it('accepts a student without a classroom and a teacher with an email', async () => {
     mockRequest.mockResolvedValueOnce({ ...USER, classroom: null });
     await expect(getMe('a')).resolves.toEqual({ ...USER, classroom: null });
-    mockRequest.mockResolvedValueOnce({ ...USER, role: 'TEACHER', email: 't@example.com', classroom: null });
-    await expect(getMe('a')).resolves.toMatchObject({ role: 'TEACHER', email: 't@example.com' });
+    mockRequest.mockResolvedValueOnce({ ...USER, role: 'TEACHER', email: 't@example.com', school: null, classroom: null });
+    await expect(getMe('a')).resolves.toMatchObject({ role: 'TEACHER', email: 't@example.com', school: null });
+  });
+
+  it('accepts an explicit null school', async () => {
+    mockRequest.mockResolvedValueOnce({ ...USER, school: null });
+    await expect(getMe('a')).resolves.toEqual({ ...USER, school: null });
   });
 
   it.each([undefined, null, 'x', {}, { accessToken: 'a' }, { accessToken: 'a', refreshToken: 1 }, { accessToken: '', refreshToken: 'r' }])(
@@ -72,12 +77,14 @@ describe('auth api response shapes', () => {
     { ...USER, role: undefined },
     { ...USER, email: undefined },
     { ...USER, email: 5 },
+    { ...USER, school: undefined },
+    { ...USER, school: 5 },
     { ...USER, classroom: undefined },
     { ...USER, classroom: 5 },
     { ...USER, classroom: { ...CLASSROOM, id: '3' } },
     { ...USER, classroom: { ...CLASSROOM, name: 5 } },
     { ...USER, classroom: { ...CLASSROOM, code: undefined } },
-    { id: 1, name: '김', role: 'STUDENT', classCode: 'ABC234' },
+    { id: 1, name: '김', role: 'STUDENT', school: '동국대부속고' },
   ])('rejects malformed user response %j', async (body) => {
     mockRequest.mockResolvedValue(body);
     await expectBad(getMe('a'));

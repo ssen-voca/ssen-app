@@ -1,4 +1,4 @@
-import { digitsOnly, normalizeClassCode, validateClassCode, validateName, validatePhoneLast4 } from './validate';
+import { digitsOnly, validateName, validatePhoneLast4, validateSchool } from './validate';
 
 describe('validateName', () => {
   it('accepts normal names, including 50 characters', () => {
@@ -40,22 +40,19 @@ describe('digitsOnly', () => {
   });
 });
 
-describe('normalizeClassCode', () => {
-  it('upper-cases and keeps only letters and digits, up to 6 characters', () => {
-    expect(normalizeClassCode('abc234')).toBe('ABC234');
-    expect(normalizeClassCode('  abc 234 ')).toBe('ABC234');
-    expect(normalizeClassCode('abc-234-xyz')).toBe('ABC234');
-    expect(normalizeClassCode('가나다')).toBe('');
-  });
-});
-
-describe('validateClassCode', () => {
-  it('accepts six characters from the code alphabet', () => {
-    expect(validateClassCode('ABC234')).toBeNull();
-    expect(validateClassCode('ZZZZZZ')).toBeNull();
+describe('validateSchool', () => {
+  it('accepts normal school names, including 100 characters', () => {
+    expect(validateSchool('동국대부속고')).toBeNull();
+    expect(validateSchool('a'.repeat(100))).toBeNull();
   });
 
-  it.each(['', 'ABC23', 'ABC2345', 'abc234', 'I0O1L1', 'ABC 23', '가나다라마바'])('rejects %j', (value) => {
-    expect(validateClassCode(value)).toBe('참여 코드 6자리를 입력해 주세요');
+  it('rejects empty and whitespace-only values', () => {
+    expect(validateSchool('')).toBe('학교를 입력해 주세요');
+    expect(validateSchool('   \t')).toBe('학교를 입력해 주세요');
+  });
+
+  it('rejects values longer than 100 characters after trimming', () => {
+    expect(validateSchool('a'.repeat(101))).toBe('학교 이름은 100자 이하로 입력해 주세요');
+    expect(validateSchool(` ${'a'.repeat(100)} `)).toBeNull();
   });
 });

@@ -9,8 +9,8 @@ export default function LoginScreen() {
   return (
     <ChoiceView
       kicker="LOGIN"
-      title={'참여 코드와 이름으로\n로그인해요'}
-      description="참여 코드, 이름, 휴대폰 번호 뒤 4자리를 입력해 주세요."
+      title={'학교와 이름으로\n로그인해요'}
+      description="학교, 이름, 휴대폰 번호 뒤 4자리를 입력해 주세요."
     >
       <CredentialsForm submitLabel="로그인" onSubmit={login} linkLabel="처음이세요? 회원가입" linkHref="/signup" />
     </ChoiceView>
