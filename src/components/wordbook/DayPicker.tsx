@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { colors } from '../../theme';
 import type { DayOption } from '../../data/wordList';
 import { AppText } from '../AppText';
@@ -27,6 +27,7 @@ export function DayPicker({ options, value, onChange }: Props) {
       </Pressable>
       {open && (
         <DayOptionList
+          style={styles.listGap}
           options={options}
           current={current.value}
           onChange={(next) => {
@@ -40,9 +41,11 @@ export function DayPicker({ options, value, onChange }: Props) {
 }
 
 /** 펼친 Day 목록. 학습 화면은 칩으로 직접 펼치므로 따로 내보낸다. */
-export function DayOptionList({ options, current, onChange }: { options: DayOption[]; current: string; onChange: (value: string) => void }) {
+type ListProps = { options: DayOption[]; current: string; onChange: (value: string) => void; style?: StyleProp<ViewStyle> };
+
+export function DayOptionList({ options, current, onChange, style }: ListProps) {
   return (
-    <View style={styles.list}>
+    <View style={[styles.list, style]}>
       {options.map((option) => {
         const selected = option.value === current;
         return (
@@ -75,7 +78,8 @@ const styles = StyleSheet.create({
   triggerLabel: { flex: 1, fontSize: 15, fontWeight: '700' },
   triggerCount: { color: colors.muted, fontSize: 11 },
   chevron: { color: colors.accent, fontSize: 13 },
-  list: { marginTop: 6, borderRadius: 14, overflow: 'hidden', backgroundColor: colors.surface },
+  listGap: { marginTop: 6 },
+  list: { borderRadius: 14, overflow: 'hidden', backgroundColor: colors.surface },
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, paddingHorizontal: 14 },
   optionSelected: { backgroundColor: colors.accentSoft },
   optionLabel: { flex: 1, fontSize: 14 },

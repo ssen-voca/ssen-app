@@ -52,7 +52,7 @@ function StudyBody({ wordId }: { wordId?: string }) {
   const total = list.length;
   const [state, dispatch] = useReducer(studyReducer, start, startStudy);
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
   const wheelRef = useRef<View>(null);
   const lastWheel = useRef(0);
@@ -166,7 +166,9 @@ function StudyBody({ wordId }: { wordId?: string }) {
         </View>
         {pickerOpen && (
           <View style={styles.picker}>
-            <DayOptionList options={options} current={scope} onChange={pickDay} />
+            <ScrollView nestedScrollEnabled style={{ maxHeight: height * 0.45 }}>
+              <DayOptionList options={options} current={scope} onChange={pickDay} />
+            </ScrollView>
           </View>
         )}
         <View style={styles.progress}>
