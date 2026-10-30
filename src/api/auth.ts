@@ -1,9 +1,9 @@
 import { ApiError, request } from './client';
 
 export type Tokens = { accessToken: string; refreshToken: string };
-export type Credentials = { classCode: string; name: string; phoneLast4: string };
+export type Credentials = { school: string; name: string; phoneLast4: string };
 export type Classroom = { id: number; name: string; code: string };
-export type User = { id: number; name: string; role: string; email: string | null; classroom: Classroom | null };
+export type User = { id: number; name: string; role: string; email: string | null; school: string | null; classroom: Classroom | null };
 
 const BAD_RESPONSE = '서버 응답이 올바르지 않아요';
 
@@ -38,8 +38,9 @@ function toUser(value: unknown): User {
     throw new ApiError(0, BAD_RESPONSE);
   }
   if (raw.email !== null && typeof raw.email !== 'string') throw new ApiError(0, BAD_RESPONSE);
-  // classroom 키가 없으면(undefined) 구버전 응답이므로 거절한다. 소속이 없는 학생은 명시적인 null이다.
-  return { id: raw.id, name: raw.name, role: raw.role, email: raw.email, classroom: toClassroom(raw.classroom) };
+  // school·classroom 키가 없으면(undefined) 구버전 응답이므로 거절한다. 없는 값은 명시적인 null이다.
+  if (raw.school !== null && typeof raw.school !== 'string') throw new ApiError(0, BAD_RESPONSE);
+  return { id: raw.id, name: raw.name, role: raw.role, email: raw.email, school: raw.school, classroom: toClassroom(raw.classroom) };
 }
 
 export async function signup(credentials: Credentials): Promise<Tokens> {
