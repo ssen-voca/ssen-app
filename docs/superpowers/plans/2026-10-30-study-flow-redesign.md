@@ -2084,3 +2084,29 @@ export const fonts = {
 
 - [ ] **Step 3: 확인** — `npm run typecheck && npm test && npm run build:web`. 브라우저에서 홈·학습·시험·내 정보·단어 폼 시트·빈 상태 모두에서 글꼴이 Pretendard로 렌더되는지 확인한다: 페이지에서 `document.fonts`에 Pretendard가 로드됐는지, 대표 요소 몇 개(`getComputedStyle(el).fontFamily`: 히어로 제목, 단어 줄, 검색 입력, 학습 표제어, 하단 탭 라벨, 폼 입력)의 값이 Pretendard로 시작하는지, 그리고 스크린샷으로 한글/영문 모두 읽기 좋은지 본다. CDN을 못 불러오는 상황(오프라인)에서도 시스템 한글 글꼴로 정상 표시되는지 한 번 확인한다(네트워크 요청 차단이 어렵다면 보고서에 미확인으로 적는다). 글자 크기·자간·색은 바꾸지 않는다.
 - [ ] **Step 4: 커밋** `git add -A src && git commit -m "feat: 앱 전체 글꼴을 가독성 좋은 Pretendard로 변경 (#10)"`
+
+---
+
+### Task 9: 학습 화면에서 Day 선택
+
+(사용자 추가 요구 2026-10-30: "학습 탭에서도 day를 선택한 후, 단어 학습을 이어나갈 수 있도록". 확인한 동작: 고른 Day의 **첫 단어부터** 학습을 시작한다. 마지막 위치 저장은 하지 않는다.)
+
+**Files:**
+- Modify: `src/data/wordList.ts`, `src/data/study.ts`, `src/app/study.tsx`, `src/app/(main)/index.tsx`
+- Test: `src/data/wordList.test.ts`, `src/data/study.test.ts`
+
+- [ ] **Step 1: 테스트 먼저**
+  - `wordList.test.ts`: `dayOptions(words)`는 `[{ value: 'all', label: '전체 Day', count: 전체 수 }, ...Day별 { value, label, count }]`(Day는 숫자 순서)를 돌려준다. 빈 목록이면 전체 항목 하나(count 0)만 있다.
+  - `study.test.ts`: `studyList(...)`가 `scope`도 돌려준다 — 단어 id가 있으면 그 단어의 Day, 없으면 `activeChapter`('all' 또는 Day). 기존 단언은 `{ list, start }`만 비교하므로 `toEqual` 쓰는 곳(`studyList([], undefined, 'all')`)은 `{ list: [], start: 0, scope: 'all' }`로 고친다. 모르는 id는 `activeChapter` 범위(`scope`)로 되돌아간다.
+- [ ] **Step 2: 구현**
+  - `wordList.ts`에 `dayOptions(words)`를 추가한다(타입 `DayOption = { value: string; label: string; count: number }`는 `DayPicker.tsx`가 이미 내보내는 것을 import하지 말고 `wordList.ts`에서 정의해 `DayPicker`가 가져다 쓰게 하거나, 중복을 피하는 쪽으로 정리한다). `index.tsx`의 인라인 `dayOptions` 계산을 이 함수로 바꾼다.
+  - `study.ts`의 `studyList` 반환에 `scope: string`을 더한다(위 규칙).
+  - `study.tsx`: 툴바의 지금은 꺼져 있는 챕터 칩(`학습 챕터 선택 (준비 중)`)을 켠다. 칩은 현재 `scope`의 라벨(`전체 Day` 또는 Day 이름)과 `▾/▴`를 보여 주고, 누르면 툴바 아래(진행 막대 위)에 `DayPicker`(홈과 같은 컴포넌트·옵션)를 펼친다. 고르면 닫히고:
+    1. `setShown({})`, `setPref('activeChapter', value)` (같은 Day 재선택이면 아무것도 안 한다),
+    2. 주소에 `word` 쿼리가 있었다면 쿼리를 없앤다(`router.setParams({ word: undefined })` 등 이 앱의 expo-router 버전에서 동작하는 방법),
+    3. `StudyBody`의 `key`에 선택 범위를 넣어(`${wordId ?? 'all'}:${scope}` 등) 새 목록의 첫 단어, 번역 닫힘 상태로 다시 시작하게 한다.
+    칩의 접근성 이름은 `학습할 Day 선택: {라벨}`, `accessibilityState.expanded`를 건다. 단어가 하나도 없을 때도 칩과 선택은 동작한다. 단어 카드의 `WORD · Day` 메타와 `n / total` 표시는 그대로.
+  - 툴바 칩의 기존 시각 값(아이콘 박스, 글자 크기)은 그대로 쓰고, 펼친 `DayPicker`는 홈과 같은 모양이되 학습 화면 배경(`colors.bg`) 위에서 구분되도록 이미 있는 토큰만 쓴다(새 색 금지).
+- [ ] **Step 3: 검증** `npm run typecheck && npm test && npm run build:web`. 브라우저: 학습 탭(쿼리 없음)에서 칩을 눌러 Day 2를 고르면 Day 2 단어만 `1 / n`로 시작하고 홈으로 돌아가도 Day 2가 선택돼 있다(같은 값 공유). 홈에서 한 줄을 눌러 `/study?word=…`로 들어온 뒤 칩에서 다른 Day를 고르면 쿼리가 사라지고 그 Day 첫 단어부터 시작한다. `전체 Day`를 고르면 전체 첫 단어부터. 번역이 열려 있던 상태에서 Day를 바꾸면 닫힌다. 390px 폭에서 칩·패널이 깨지지 않는다. 콘솔 오류(8080 제외) 없음.
+- [ ] **Step 4: 커밋** `git add -A src && git commit -m "feat: 학습 화면에서 Day를 선택해 첫 단어부터 학습 (#10)"`
+
