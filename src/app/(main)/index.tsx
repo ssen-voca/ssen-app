@@ -96,6 +96,7 @@ export default function WordbookScreen() {
           options={dayOptions}
           value={chapter}
           onChange={(value) => {
+            if (value === chapter) return;
             setShown({});
             setPref('activeChapter', value);
           }}
