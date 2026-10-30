@@ -1,9 +1,9 @@
 import { blankDetails } from './normalize';
 import type { Word } from './types';
-import { chapterOptions, removeWord, upsertWord } from './wordList';
+import { chapterOptions, dayOptions, effectiveChapter, groupByChapter, orderedWords, removeWord, upsertWord } from './wordList';
 
 const make = (id: string, chapter = 'Day 1', text = id): Word => ({
-  id, word: text, meanings: ['뜻'], definitions: [''], chapter, details: blankDetails(),
+  id, word: text, meanings: ['뜻'], synonyms: [''], chapter, details: blankDetails(),
 });
 
 describe('upsertWord', () => {
@@ -39,5 +39,57 @@ describe('chapterOptions', () => {
 
   it('still offers Day 1 for an empty list', () => {
     expect(chapterOptions([])).toEqual(['Day 1']);
+  });
+});
+
+describe('groupByChapter', () => {
+  it('orders chapters numerically and keeps the stored order inside a chapter', () => {
+    const list = [make('a', 'Day 10'), make('b', 'Day 2'), make('c', 'Day 2'), make('d', 'Day 1')];
+    const groups = groupByChapter(list);
+    expect(groups.map((group) => group.chapter)).toEqual(['Day 1', 'Day 2', 'Day 10']);
+    expect(groups[1].words.map((word) => word.id)).toEqual(['b', 'c']);
+  });
+
+  it('returns no groups for an empty list and does not mutate the input', () => {
+    expect(groupByChapter([])).toEqual([]);
+    const list = [make('a', 'Day 2'), make('b', 'Day 1')];
+    groupByChapter(list);
+    expect(list.map((word) => word.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('orderedWords', () => {
+  it('flattens the chapter groups in display order', () => {
+    const list = [make('a', 'Day 10'), make('b', 'Day 2'), make('c', 'Day 2'), make('d', 'Day 1')];
+    expect(orderedWords(list).map((word) => word.id)).toEqual(['d', 'b', 'c', 'a']);
+  });
+});
+
+describe('effectiveChapter', () => {
+  const list = [make('a', 'Day 1'), make('b', 'Day 2')];
+
+  it('keeps "all" and chapters that still exist', () => {
+    expect(effectiveChapter(list, 'all')).toBe('all');
+    expect(effectiveChapter(list, 'Day 2')).toBe('Day 2');
+  });
+
+  it('falls back to "all" when the saved chapter has no words left', () => {
+    expect(effectiveChapter(list, 'Day 5')).toBe('all');
+    expect(effectiveChapter([], 'Day 1')).toBe('all');
+  });
+});
+
+describe('dayOptions', () => {
+  it('starts with the all option, then each Day in numeric order with its count', () => {
+    const list = [make('a', 'Day 10'), make('b', 'Day 2'), make('c', 'Day 2')];
+    expect(dayOptions(list)).toEqual([
+      { value: 'all', label: '전체 Day', count: 3 },
+      { value: 'Day 2', label: 'Day 2', count: 2 },
+      { value: 'Day 10', label: 'Day 10', count: 1 },
+    ]);
+  });
+
+  it('has only the all option for an empty list', () => {
+    expect(dayOptions([])).toEqual([{ value: 'all', label: '전체 Day', count: 0 }]);
   });
 });

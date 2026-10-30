@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { DEFAULT_PREFS, loadPrefs, loadWords, savePrefs, saveWords } from './storage';
 import type { Prefs, ShownMap, Word } from './types';
-import { removeWord, upsertWord } from './wordList';
+import { effectiveChapter, removeWord, upsertWord } from './wordList';
 
 export type SaveResult = 'saved' | 'not-persisted';
 
@@ -44,6 +44,14 @@ export function WordsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (ready) void savePrefs(prefs);
   }, [ready, prefs]);
+
+  // 저장된 Day에 단어가 하나도 남지 않으면 전체로 되돌린다(학습·상단 칩·폼이 모두 같은 값을 본다).
+  useEffect(() => {
+    if (ready && effectiveChapter(words, prefs.activeChapter) !== prefs.activeChapter) {
+      setPrefs((current) => ({ ...current, activeChapter: 'all' }));
+      setShown({});
+    }
+  }, [ready, words, prefs.activeChapter]);
 
   const setPref = useCallback(<K extends keyof Prefs>(key: K, value: Prefs[K]) => {
     setPrefs((current) => ({ ...current, [key]: value }));

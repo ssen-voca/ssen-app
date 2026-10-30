@@ -14,14 +14,15 @@ import { MainScroll } from '../../components/MainScroll';
 import { useToast } from '../../components/Toast';
 import { NOT_PERSISTED_MESSAGE, useWordForm } from '../../components/WordFormSheet';
 import { MaskPanel } from '../../components/wordbook/MaskPanel';
-import { WordCard } from '../../components/wordbook/WordCard';
-import { searchWords } from '../../data/filter';
-import { anyCardVisible, toggleAll, toggleCard, toggleField } from '../../data/mask';
+import { DayPicker } from '../../components/wordbook/DayPicker';
+import { DaySection } from '../../components/wordbook/DaySection';
+import { WordRow } from '../../components/wordbook/WordRow';
+import { searchWords, wordsInChapter } from '../../data/filter';
+import { anyCardVisible, toggleAll, toggleField } from '../../data/mask';
 import type { Word } from '../../data/types';
+import { dayOptions, effectiveChapter, groupByChapter } from '../../data/wordList';
 import { useWords } from '../../data/WordsContext';
-import { colors, fonts, isNarrow } from '../../theme';
-
-type ViewMode = 'card' | 'list';
+import { colors, fonts } from '../../theme';
 
 function todayLabel(): string {
   return new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date());
@@ -32,9 +33,12 @@ export default function WordbookScreen() {
   const { open } = useWordForm();
   const toast = useToast();
   const [query, setQuery] = useState('');
-  const [view, setView] = useState<ViewMode>('card');
   const { width } = useWindowDimensions();
-  const list = useMemo(() => searchWords(words, query, prefs.activeChapter), [words, query, prefs.activeChapter]);
+  const chapter = effectiveChapter(words, prefs.activeChapter);
+  const dayWords = useMemo(() => wordsInChapter(words, chapter), [words, chapter]);
+  const options = useMemo(() => dayOptions(words), [words]);
+  const list = useMemo(() => searchWords(words, query, chapter), [words, query, chapter]);
+  const groups = useMemo(() => groupByChapter(list), [list]);
 
   if (!ready) {
     return <MainScroll>{null}</MainScroll>;
@@ -45,7 +49,6 @@ export default function WordbookScreen() {
     toast(result === 'saved' ? `‘${word.word}’ 단어를 삭제했어요` : NOT_PERSISTED_MESSAGE);
   };
 
-  const narrow = isNarrow(width);
   const heroSize = Math.min(30, Math.max(24, width * 0.07));
   const searching = query.trim() !== '';
 
@@ -64,61 +67,22 @@ export default function WordbookScreen() {
         </View>
       </View>
 
-      <Pressable accessibilityRole="button" onPress={() => router.navigate('/study')} style={styles.launch}>
-        <View style={styles.launchIcon}>
-          <AppText style={styles.launchIconText}>▤</AppText>
-        </View>
-        <View style={styles.launchBody}>
-          <AppText style={styles.launchTitle}>오늘의 단어 학습</AppText>
-          <AppText style={styles.launchSub}>한 단어씩 넘기며 뜻과 예문 익히기</AppText>
-        </View>
-        <AppText aria-hidden style={styles.launchArrow}>
-          →
-        </AppText>
-      </Pressable>
-
-      <View style={styles.actions}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.navigate('/add')}
-          style={(state) => [
-            styles.actionCard,
-            styles.actionPrimary,
-            narrow && styles.actionCardNarrow,
-            (state as PressableStateCallbackType & { hovered?: boolean }).hovered && styles.actionPrimaryHover,
-          ]}
-        >
-          <View style={[styles.actionIcon, styles.actionIconPrimary, narrow && styles.actionIconNarrow]}>
-            <AppText style={[styles.actionIconText, styles.onPrimary]}>＋</AppText>
-          </View>
-          <View style={styles.actionBody}>
-            <AppText style={[styles.actionTitle, styles.onPrimary, narrow && styles.actionTitleNarrow]}>단어 추가</AppText>
-            <AppText style={[styles.actionSub, styles.onPrimarySub, narrow && styles.actionSubNarrow]}>
-              추가 방법 선택하기
-            </AppText>
-          </View>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.navigate('/account')}
-          style={[styles.actionCard, narrow && styles.actionCardNarrow]}
-        >
-          <View style={[styles.actionIcon, narrow && styles.actionIconNarrow]}>
-            <Icon name="account" size={21} color={colors.accent} />
-          </View>
-          <View style={styles.actionBody}>
-            <AppText style={[styles.actionTitle, narrow && styles.actionTitleNarrow]}>내 정보</AppText>
-            <AppText style={[styles.actionSub, narrow && styles.actionSubNarrow]}>로그인 방식 선택하기</AppText>
-          </View>
-        </Pressable>
-      </View>
-
       <MaskPanel
         prefs={prefs}
-        anyVisible={anyCardVisible(prefs, shown, words)}
+        anyVisible={anyCardVisible(prefs, shown, dayWords)}
         onToggle={(key) => setPref(key, !prefs[key])}
-        onRevealAll={() => setShown(toggleAll(prefs, shown, words))}
-      />
+        onRevealAll={() => setShown(toggleAll(prefs, shown, dayWords))}
+      >
+        <DayPicker
+          options={options}
+          value={chapter}
+          onChange={(value) => {
+            if (value === chapter) return;
+            setShown({});
+            setPref('activeChapter', value);
+          }}
+        />
+      </MaskPanel>
 
       <View style={styles.tools}>
         <View style={styles.search}>
@@ -134,49 +98,32 @@ export default function WordbookScreen() {
             style={styles.searchInput}
           />
         </View>
-        <View accessibilityLabel="보기 방식" style={styles.toggle}>
-          {(['card', 'list'] as const).map((mode) => {
-            const active = view === mode;
-            return (
-              <Pressable
-                key={mode}
-                accessibilityRole="button"
-                accessibilityLabel={mode === 'card' ? '카드 보기' : '리스트 보기'}
-                accessibilityState={{ selected: active }}
-                onPress={() => setView(mode)}
-                style={[styles.toggleButton, active && styles.toggleButtonActive]}
-              >
-                <Icon name={mode === 'card' ? 'viewCard' : 'viewList'} size={19} color={active ? colors.accent : '#99a1ad'} />
-              </Pressable>
-            );
-          })}
-        </View>
       </View>
 
-      {list.length > 0 ? (
-        <View style={[styles.grid, view === 'list' && styles.gridList]}>
-          {list.map((word, i) => (
-            <WordCard
-              key={word.id}
-              word={word}
-              number={i + 1}
-              mode={view}
-              prefs={prefs}
-              shown={shown}
-              onToggleField={(field) => setShown(toggleField(shown, word.id, field))}
-              onToggleCard={() => setShown(toggleCard(prefs, shown, word))}
-              onEdit={() => open(word.id)}
-              onDelete={() => remove(word)}
-            />
-          ))}
-        </View>
+      {groups.length > 0 ? (
+        groups.map((group) => (
+          <DaySection key={group.chapter} chapter={group.chapter} count={group.words.length}>
+            {group.words.map((word) => (
+              <WordRow
+                key={word.id}
+                word={word}
+                prefs={prefs}
+                shown={shown}
+                onToggleField={(field) => setShown(toggleField(shown, word.id, field))}
+                onOpen={() => router.navigate({ pathname: '/study', params: { word: word.id } })}
+                onEdit={() => open(word.id)}
+                onDelete={() => remove(word)}
+              />
+            ))}
+          </DaySection>
+        ))
       ) : (
         <View style={styles.empty}>
           <View style={styles.emptyIcon}>
             <AppText style={styles.emptyIconText}>Aa</AppText>
           </View>
           <AppText role="heading" style={styles.emptyTitle}>
-            {searching ? '검색 결과가 없어요' : '이 챕터에는 단어가 없어요'}
+            {searching ? '검색 결과가 없어요' : '단어장에 단어가 없어요'}
           </AppText>
           <AppText style={styles.emptyText}>
             {searching ? '다른 단어나 뜻으로 검색해 보세요.' : '직접 입력하거나 사진·엑셀 파일을 불러와 보세요.'}
@@ -222,66 +169,6 @@ const styles = StyleSheet.create({
   },
   countValue: { color: colors.accent, fontSize: 21, lineHeight: 21, fontWeight: '700' },
   countLabel: { marginTop: 5, color: colors.muted, fontSize: 11 },
-  launch: {
-    minHeight: 76,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 13,
-    padding: 13,
-    borderWidth: 1,
-    borderColor: '#d8e7df',
-    borderRadius: 18,
-    backgroundColor: '#eaf3ee',
-  },
-  launchIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  launchIconText: { color: '#fff' },
-  launchBody: { flex: 1 },
-  launchTitle: { fontSize: 14, fontWeight: '700' },
-  launchSub: { marginTop: 3, color: '#71827a', fontSize: 11 },
-  launchArrow: { color: colors.accent, fontSize: 22 },
-  actions: { flexDirection: 'row', gap: 10 },
-  actionCard: {
-    flex: 1,
-    minHeight: 84,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    boxShadow: '0 3px 14px rgba(25, 40, 64, 0.03)',
-  },
-  actionCardNarrow: { paddingVertical: 12, paddingHorizontal: 10, gap: 8 },
-  actionPrimary: { borderColor: colors.accent, backgroundColor: colors.accent, boxShadow: 'none' },
-  actionPrimaryHover: { backgroundColor: colors.accentDark },
-  actionIcon: {
-    width: 37,
-    height: 37,
-    borderRadius: 13,
-    backgroundColor: 'rgba(23, 111, 242, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionIconNarrow: { width: 33, height: 33 },
-  actionIconPrimary: { backgroundColor: 'rgba(255, 255, 255, 0.17)' },
-  actionIconText: { color: colors.accent, fontSize: 25, fontWeight: '300' },
-  actionBody: { flex: 1, minWidth: 0 },
-  actionTitle: { marginBottom: 4, fontSize: 15, fontWeight: '700' },
-  actionTitleNarrow: { fontSize: 13 },
-  actionSub: { color: colors.muted, fontSize: 11, lineHeight: 14.3 },
-  actionSubNarrow: { fontSize: 10 },
-  onPrimary: { color: '#fff' },
-  onPrimarySub: { color: 'rgba(255, 255, 255, 0.76)' },
   tools: { flexDirection: 'row', gap: 9, marginTop: 18, marginBottom: 12 },
   search: {
     flex: 1,
@@ -296,11 +183,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   searchInput: { flex: 1, minWidth: 0, fontSize: 14, fontFamily: fonts.body, color: colors.text },
-  toggle: { height: 48, padding: 4, flexDirection: 'row', borderRadius: 15, backgroundColor: '#ebe8e1' },
-  toggleButton: { width: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  toggleButtonActive: { backgroundColor: colors.surface, boxShadow: '0 2px 8px rgba(25, 40, 64, 0.1)' },
-  grid: { gap: 11 },
-  gridList: { gap: 8 },
   empty: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 20 },
   emptyIcon: {
     width: 64,

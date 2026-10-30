@@ -6,14 +6,11 @@ export type IconName =
   | 'chevronDown'
   | 'account'
   | 'search'
-  | 'viewCard'
-  | 'viewList'
   | 'edit'
   | 'delete'
   | 'study'
   | 'home'
-  | 'test'
-  | 'add';
+  | 'test';
 
 const SHAPES: Record<IconName, ReactNode> = {
   filter: <Path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6" />,
@@ -28,20 +25,6 @@ const SHAPES: Record<IconName, ReactNode> = {
     <>
       <Circle cx={11} cy={11} r={6.5} />
       <Path d="m16 16 4 4" />
-    </>
-  ),
-  viewCard: (
-    <>
-      <Rect x={4} y={4} width={16} height={16} rx={3} />
-      <Path d="M8 9h8M8 13h5" />
-    </>
-  ),
-  viewList: (
-    <>
-      <Path d="M9 6h11M9 12h11M9 18h11" />
-      <Circle cx={5} cy={6} r={1} />
-      <Circle cx={5} cy={12} r={1} />
-      <Circle cx={5} cy={18} r={1} />
     </>
   ),
   edit: <Path d="m4 20 4.2-1 10-10a2.1 2.1 0 0 0-3-3l-10 10zM14 7l3 3" />,
@@ -64,7 +47,6 @@ const SHAPES: Record<IconName, ReactNode> = {
       <Path d="m9 11 2 2 4-4" />
     </>
   ),
-  add: <Path d="M12 5v14M5 12h14" />,
 };
 
 type Props = { name: IconName; size?: number; color: string };

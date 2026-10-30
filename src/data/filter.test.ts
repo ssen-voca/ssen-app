@@ -1,4 +1,4 @@
-import { detailRows, searchWords, wordsInChapter } from './filter';
+import { searchWords, wordsInChapter } from './filter';
 import { SAMPLE_WORDS } from './samples';
 import type { Word } from './types';
 
@@ -13,11 +13,16 @@ describe('wordsInChapter', () => {
 });
 
 describe('searchWords', () => {
-  it('matches the word, meanings, definitions and details, ignoring case and outer spaces', () => {
+  it('matches the word, meanings, synonyms and example, ignoring case and outer spaces', () => {
     expect(ids(searchWords(SAMPLE_WORDS, '  RESILIENT ', 'all'))).toEqual(['sample-resilient']);
     expect(ids(searchWords(SAMPLE_WORDS, '통찰력', 'all'))).toEqual(['sample-insight']);
-    expect(ids(searchWords(SAMPLE_WORDS, 'growing crops', 'all'))).toEqual(['sample-cultivate']);
-    expect(ids(searchWords(SAMPLE_WORDS, 'derivation', 'all'))).toEqual(['sample-derive']);
+    expect(ids(searchWords(SAMPLE_WORDS, 'nurture', 'all'))).toEqual(['sample-cultivate']);
+    expect(ids(searchWords(SAMPLE_WORDS, 'deduce', 'all'))).toEqual(['sample-derive']);
+    expect(ids(searchWords(SAMPLE_WORDS, 'The data gave', 'all'))).toEqual(['sample-insight']);
+  });
+
+  it('no longer searches the removed English definitions', () => {
+    expect(searchWords(SAMPLE_WORDS, 'growing crops', 'all')).toEqual([]);
   });
 
   it('treats a blank query as "everything in the chapter"', () => {
@@ -30,22 +35,5 @@ describe('searchWords', () => {
 
   it('combines the chapter filter with the query', () => {
     expect(searchWords(SAMPLE_WORDS, 'derive', 'Day 1')).toEqual([]);
-  });
-});
-
-describe('detailRows', () => {
-  it('lists rows in display order and skips empty ones', () => {
-    expect(detailRows(SAMPLE_WORDS[0])).toEqual(['definition', 'example', 'synonyms', 'antonyms', 'derived', 'related']);
-    expect(detailRows(SAMPLE_WORDS[3])).toEqual(['definition', 'example', 'synonyms', 'derived', 'related']);
-  });
-
-  it('shows the example row for a Korean-only example and hides all-blank definitions', () => {
-    const base = SAMPLE_WORDS[0];
-    const word: Word = {
-      ...base,
-      definitions: ['', '', ''],
-      details: { ...base.details, example: '', synonyms: '', antonyms: '', derived: '', related: '' },
-    };
-    expect(detailRows(word)).toEqual(['example']);
   });
 });

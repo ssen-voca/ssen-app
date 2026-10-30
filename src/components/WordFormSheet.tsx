@@ -17,7 +17,7 @@ import type { Word } from '../data/types';
 import { buildWord, emptyForm, formFromWord, type FormValues } from '../data/wordForm';
 import { chapterOptions } from '../data/wordList';
 import { useWords } from '../data/WordsContext';
-import { CANVAS, colors, isNarrow } from '../theme';
+import { CANVAS, colors, fonts, isNarrow } from '../theme';
 import { AppText } from './AppText';
 import { Field, FormButton, FormInput, formStyles } from './FormControls';
 import { useToast } from './Toast';
@@ -79,17 +79,13 @@ const PRIMARY_FIELDS: FieldSpec[] = [
   { key: 'word', label: '영단어', placeholder: '예: resilient', required: true },
   { key: 'chapter', label: '챕터', placeholder: '' },
   { key: 'meaning', label: '뜻', hint: '여러 뜻은 줄바꿈으로 입력', placeholder: '예: 회복력이 있는\n탄력 있는', rows: 3, full: true, required: true },
+  { key: 'synonyms', label: '뜻별 동의어', hint: '뜻 순서대로 한 줄씩, 여러 개는 쉼표로', placeholder: 'strong, tough\nflexible, elastic', rows: 3, full: true },
 ];
 
 const EXTRA_FIELDS: FieldSpec[] = [
-  { key: 'definition', label: '영영 풀이', hint: '한국어 뜻 순서대로 한 줄에 하나씩 입력', placeholder: 'able to recover quickly from difficulty\nable to return to its original shape', rows: 3, full: true },
   { key: 'example', label: '영어 예문', placeholder: 'She remained resilient through change.', rows: 2, full: true },
   { key: 'exampleKo', label: '한국어 예문', placeholder: '그녀는 변화 속에서도 회복력을 유지했다.', rows: 2, full: true },
-  { key: 'exampleMeaning', label: '예문에서 사용된 뜻', hint: '한국어 문장에서 굵게 표시할 표현', placeholder: '예: 회복력을 유지했다', full: true },
-  { key: 'synonyms', label: '동의어', placeholder: 'strong, flexible' },
-  { key: 'antonyms', label: '반의어', placeholder: 'fragile' },
-  { key: 'derived', label: '파생어', placeholder: 'resilience, resiliently' },
-  { key: 'related', label: '유의어', placeholder: 'durable, adaptable', full: true },
+  { key: 'exampleMeaning', label: '예문에서 사용된 뜻', hint: '한국어 문장에서 가려 둘 표현', placeholder: '예: 회복력을 유지했다', full: true },
 ];
 
 function Input({ spec, value, onChange, onSubmit }: { spec: FieldSpec; value: string; onChange: (value: string) => void; onSubmit: () => void }) {
@@ -148,6 +144,7 @@ const WEB_SELECT = {
   borderRadius: 14,
   background: '#fafbfc',
   color: colors.text,
+  fontFamily: fonts.body,
   fontSize: 14,
   outline: 'none',
   transition: '.2s',
@@ -265,7 +262,7 @@ function WordFormSheet({ id, initial, onClose }: SheetProps) {
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <AppText style={styles.dividerText}>추가 정보</AppText>
+            <AppText style={styles.dividerText}>예문</AppText>
             <View style={styles.dividerLine} />
           </View>
 

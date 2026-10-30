@@ -1,15 +1,13 @@
 import type { MaskField, Prefs, ShownMap, Word } from './types';
 
-type MaskPrefs = Pick<Prefs, 'maskWord' | 'maskMeaning' | 'maskDetails'>;
+type MaskPrefs = Pick<Prefs, 'maskWord' | 'maskMeaning'>;
 
 const PREF_FOR_FIELD: Record<MaskField, keyof MaskPrefs> = {
   word: 'maskWord',
-  exampleWord: 'maskWord',
   meaning: 'maskMeaning',
-  details: 'maskDetails',
 };
 
-const ALL_FIELDS: MaskField[] = ['word', 'meaning', 'details', 'exampleWord'];
+const ALL_FIELDS: MaskField[] = ['word', 'meaning'];
 
 export function isShown(shown: ShownMap, id: string, field: MaskField): boolean {
   return shown[id]?.[field] === true;
@@ -29,19 +27,12 @@ export function toggleField(shown: ShownMap, id: string, field: MaskField): Show
 
 export function cardVisible(prefs: MaskPrefs, shown: ShownMap, word: Word): boolean {
   return (
-    (prefs.maskWord && isShown(shown, word.id, 'word')) ||
-    (prefs.maskMeaning && isShown(shown, word.id, 'meaning')) ||
-    (prefs.maskDetails && isShown(shown, word.id, 'details')) ||
-    (prefs.maskWord && word.details.example !== '' && isShown(shown, word.id, 'exampleWord'))
+    (prefs.maskWord && isShown(shown, word.id, 'word')) || (prefs.maskMeaning && isShown(shown, word.id, 'meaning'))
   );
 }
 
 function setCard(shown: ShownMap, id: string, value: boolean): ShownMap {
   return ALL_FIELDS.reduce((acc, field) => setField(acc, id, field, value), shown);
-}
-
-export function toggleCard(prefs: MaskPrefs, shown: ShownMap, word: Word): ShownMap {
-  return setCard(shown, word.id, !cardVisible(prefs, shown, word));
 }
 
 export function anyCardVisible(prefs: MaskPrefs, shown: ShownMap, words: Word[]): boolean {
@@ -51,8 +42,4 @@ export function anyCardVisible(prefs: MaskPrefs, shown: ShownMap, words: Word[])
 export function toggleAll(prefs: MaskPrefs, shown: ShownMap, words: Word[]): ShownMap {
   const reveal = !anyCardVisible(prefs, shown, words);
   return words.reduce((acc, word) => setCard(acc, word.id, reveal), shown);
-}
-
-export function hasMask(prefs: MaskPrefs, hasDetails: boolean): boolean {
-  return prefs.maskWord || prefs.maskMeaning || (prefs.maskDetails && hasDetails);
 }
