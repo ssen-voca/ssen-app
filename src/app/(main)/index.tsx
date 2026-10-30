@@ -14,14 +14,15 @@ import { MainScroll } from '../../components/MainScroll';
 import { useToast } from '../../components/Toast';
 import { NOT_PERSISTED_MESSAGE, useWordForm } from '../../components/WordFormSheet';
 import { MaskPanel } from '../../components/wordbook/MaskPanel';
+import { DayPicker } from '../../components/wordbook/DayPicker';
 import { DaySection } from '../../components/wordbook/DaySection';
 import { WordRow } from '../../components/wordbook/WordRow';
-import { searchWords } from '../../data/filter';
+import { searchWords, wordsInChapter } from '../../data/filter';
 import { anyCardVisible, toggleAll, toggleField } from '../../data/mask';
 import type { Word } from '../../data/types';
-import { groupByChapter } from '../../data/wordList';
+import { effectiveChapter, groupByChapter } from '../../data/wordList';
 import { useWords } from '../../data/WordsContext';
-import { colors, fonts, isNarrow } from '../../theme';
+import { colors, fonts } from '../../theme';
 
 function todayLabel(): string {
   return new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date());
@@ -33,7 +34,16 @@ export default function WordbookScreen() {
   const toast = useToast();
   const [query, setQuery] = useState('');
   const { width } = useWindowDimensions();
-  const list = useMemo(() => searchWords(words, query, prefs.activeChapter), [words, query, prefs.activeChapter]);
+  const chapter = effectiveChapter(words, prefs.activeChapter);
+  const dayWords = useMemo(() => wordsInChapter(words, chapter), [words, chapter]);
+  const dayOptions = useMemo(
+    () => [
+      { value: 'all', label: '전체 Day', count: words.length },
+      ...groupByChapter(words).map((group) => ({ value: group.chapter, label: group.chapter, count: group.words.length })),
+    ],
+    [words],
+  );
+  const list = useMemo(() => searchWords(words, query, chapter), [words, query, chapter]);
   const groups = useMemo(() => groupByChapter(list), [list]);
 
   if (!ready) {
@@ -45,7 +55,6 @@ export default function WordbookScreen() {
     toast(result === 'saved' ? `‘${word.word}’ 단어를 삭제했어요` : NOT_PERSISTED_MESSAGE);
   };
 
-  const narrow = isNarrow(width);
   const heroSize = Math.min(30, Math.max(24, width * 0.07));
   const searching = query.trim() !== '';
 
@@ -77,48 +86,21 @@ export default function WordbookScreen() {
         </AppText>
       </Pressable>
 
-      <View style={styles.actions}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.navigate('/add')}
-          style={(state) => [
-            styles.actionCard,
-            styles.actionPrimary,
-            narrow && styles.actionCardNarrow,
-            (state as PressableStateCallbackType & { hovered?: boolean }).hovered && styles.actionPrimaryHover,
-          ]}
-        >
-          <View style={[styles.actionIcon, styles.actionIconPrimary, narrow && styles.actionIconNarrow]}>
-            <AppText style={[styles.actionIconText, styles.onPrimary]}>＋</AppText>
-          </View>
-          <View style={styles.actionBody}>
-            <AppText style={[styles.actionTitle, styles.onPrimary, narrow && styles.actionTitleNarrow]}>단어 추가</AppText>
-            <AppText style={[styles.actionSub, styles.onPrimarySub, narrow && styles.actionSubNarrow]}>
-              추가 방법 선택하기
-            </AppText>
-          </View>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.navigate('/account')}
-          style={[styles.actionCard, narrow && styles.actionCardNarrow]}
-        >
-          <View style={[styles.actionIcon, narrow && styles.actionIconNarrow]}>
-            <Icon name="account" size={21} color={colors.accent} />
-          </View>
-          <View style={styles.actionBody}>
-            <AppText style={[styles.actionTitle, narrow && styles.actionTitleNarrow]}>내 정보</AppText>
-            <AppText style={[styles.actionSub, narrow && styles.actionSubNarrow]}>로그인 방식 선택하기</AppText>
-          </View>
-        </Pressable>
-      </View>
-
       <MaskPanel
         prefs={prefs}
-        anyVisible={anyCardVisible(prefs, shown, words)}
+        anyVisible={anyCardVisible(prefs, shown, dayWords)}
         onToggle={(key) => setPref(key, !prefs[key])}
-        onRevealAll={() => setShown(toggleAll(prefs, shown, words))}
-      />
+        onRevealAll={() => setShown(toggleAll(prefs, shown, dayWords))}
+      >
+        <DayPicker
+          options={dayOptions}
+          value={chapter}
+          onChange={(value) => {
+            setShown({});
+            setPref('activeChapter', value);
+          }}
+        />
+      </MaskPanel>
 
       <View style={styles.tools}>
         <View style={styles.search}>
@@ -230,41 +212,6 @@ const styles = StyleSheet.create({
   launchTitle: { fontSize: 14, fontWeight: '700' },
   launchSub: { marginTop: 3, color: '#71827a', fontSize: 11 },
   launchArrow: { color: colors.accent, fontSize: 22 },
-  actions: { flexDirection: 'row', gap: 10 },
-  actionCard: {
-    flex: 1,
-    minHeight: 84,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    boxShadow: '0 3px 14px rgba(25, 40, 64, 0.03)',
-  },
-  actionCardNarrow: { paddingVertical: 12, paddingHorizontal: 10, gap: 8 },
-  actionPrimary: { borderColor: colors.accent, backgroundColor: colors.accent, boxShadow: 'none' },
-  actionPrimaryHover: { backgroundColor: colors.accentDark },
-  actionIcon: {
-    width: 37,
-    height: 37,
-    borderRadius: 13,
-    backgroundColor: 'rgba(23, 111, 242, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionIconNarrow: { width: 33, height: 33 },
-  actionIconPrimary: { backgroundColor: 'rgba(255, 255, 255, 0.17)' },
-  actionIconText: { color: colors.accent, fontSize: 25, fontWeight: '300' },
-  actionBody: { flex: 1, minWidth: 0 },
-  actionTitle: { marginBottom: 4, fontSize: 15, fontWeight: '700' },
-  actionTitleNarrow: { fontSize: 13 },
-  actionSub: { color: colors.muted, fontSize: 11, lineHeight: 14.3 },
-  actionSubNarrow: { fontSize: 10 },
-  onPrimary: { color: '#fff' },
-  onPrimarySub: { color: 'rgba(255, 255, 255, 0.76)' },
   tools: { flexDirection: 'row', gap: 9, marginTop: 18, marginBottom: 12 },
   search: {
     flex: 1,

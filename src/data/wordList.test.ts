@@ -1,6 +1,6 @@
 import { blankDetails } from './normalize';
 import type { Word } from './types';
-import { chapterOptions, groupByChapter, orderedWords, removeWord, upsertWord } from './wordList';
+import { chapterOptions, effectiveChapter, groupByChapter, orderedWords, removeWord, upsertWord } from './wordList';
 
 const make = (id: string, chapter = 'Day 1', text = id): Word => ({
   id, word: text, meanings: ['뜻'], synonyms: [''], chapter, details: blankDetails(),
@@ -62,5 +62,19 @@ describe('orderedWords', () => {
   it('flattens the chapter groups in display order', () => {
     const list = [make('a', 'Day 10'), make('b', 'Day 2'), make('c', 'Day 2'), make('d', 'Day 1')];
     expect(orderedWords(list).map((word) => word.id)).toEqual(['d', 'b', 'c', 'a']);
+  });
+});
+
+describe('effectiveChapter', () => {
+  const list = [make('a', 'Day 1'), make('b', 'Day 2')];
+
+  it('keeps "all" and chapters that still exist', () => {
+    expect(effectiveChapter(list, 'all')).toBe('all');
+    expect(effectiveChapter(list, 'Day 2')).toBe('Day 2');
+  });
+
+  it('falls back to "all" when the saved chapter has no words left', () => {
+    expect(effectiveChapter(list, 'Day 5')).toBe('all');
+    expect(effectiveChapter([], 'Day 1')).toBe('all');
   });
 });

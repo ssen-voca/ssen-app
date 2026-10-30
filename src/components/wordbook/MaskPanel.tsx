@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { Prefs } from '../../data/types';
 import { colors } from '../../theme';
@@ -15,11 +16,13 @@ type Props = {
   anyVisible: boolean;
   onToggle: (key: MaskKey) => void;
   onRevealAll: () => void;
+  children?: ReactNode;
 };
 
-export function MaskPanel({ prefs, anyVisible, onToggle, onRevealAll }: Props) {
+export function MaskPanel({ prefs, anyVisible, onToggle, onRevealAll, children }: Props) {
   return (
     <View accessibilityLabel="암기 가리기 설정" style={styles.panel}>
+      {children ? <View style={styles.slot}>{children}</View> : null}
       <View style={styles.heading}>
         <View style={styles.headingLeft}>
           <View aria-hidden style={styles.spark}>
@@ -57,6 +60,7 @@ export function MaskPanel({ prefs, anyVisible, onToggle, onRevealAll }: Props) {
 
 const styles = StyleSheet.create({
   panel: { marginTop: 18, padding: 16, borderRadius: 20, backgroundColor: '#e9f1ec' },
+  slot: { marginBottom: 15 },
   heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   headingLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   spark: {

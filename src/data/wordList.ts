@@ -38,3 +38,8 @@ export function groupByChapter(words: Word[]): ChapterGroup[] {
 export function orderedWords(words: Word[]): Word[] {
   return groupByChapter(words).flatMap((group) => group.words);
 }
+
+/** 저장된 활성 챕터에 단어가 더 이상 없으면 전체('all')로 되돌린다. */
+export function effectiveChapter(words: Word[], active: string): string {
+  return active === 'all' || words.some((word) => word.chapter === active) ? active : 'all';
+}
