@@ -73,19 +73,6 @@ export default function WordbookScreen() {
         </View>
       </View>
 
-      <Pressable accessibilityRole="button" onPress={() => router.navigate('/study')} style={styles.launch}>
-        <View style={styles.launchIcon}>
-          <AppText style={styles.launchIconText}>▤</AppText>
-        </View>
-        <View style={styles.launchBody}>
-          <AppText style={styles.launchTitle}>오늘의 단어 학습</AppText>
-          <AppText style={styles.launchSub}>한 단어씩 넘기며 뜻과 예문 익히기</AppText>
-        </View>
-        <AppText aria-hidden style={styles.launchArrow}>
-          →
-        </AppText>
-      </Pressable>
-
       <MaskPanel
         prefs={prefs}
         anyVisible={anyCardVisible(prefs, shown, dayWords)}
@@ -188,31 +175,6 @@ const styles = StyleSheet.create({
   },
   countValue: { color: colors.accent, fontSize: 21, lineHeight: 21, fontWeight: '700' },
   countLabel: { marginTop: 5, color: colors.muted, fontSize: 11 },
-  launch: {
-    minHeight: 76,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 13,
-    padding: 13,
-    borderWidth: 1,
-    borderColor: '#d8e7df',
-    borderRadius: 18,
-    backgroundColor: '#eaf3ee',
-  },
-  launchIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  launchIconText: { color: '#fff' },
-  launchBody: { flex: 1 },
-  launchTitle: { fontSize: 14, fontWeight: '700' },
-  launchSub: { marginTop: 3, color: '#71827a', fontSize: 11 },
-  launchArrow: { color: colors.accent, fontSize: 22 },
   tools: { flexDirection: 'row', gap: 9, marginTop: 18, marginBottom: 12 },
   search: {
     flex: 1,
