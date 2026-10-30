@@ -46,6 +46,10 @@ describe('swipeDirection', () => {
     expect(swipeDirection(80, 5)).toBe(-1);
     expect(swipeDirection(30, 0)).toBe(0);
     expect(swipeDirection(-80, 70)).toBe(0);
+    expect(swipeDirection(-50, 0)).toBe(0);
+    expect(swipeDirection(-60, 0)).toBe(1);
+    expect(swipeDirection(50, 0)).toBe(0);
+    expect(swipeDirection(60, 0)).toBe(-1);
   });
 });
 
@@ -103,7 +107,15 @@ describe('studyList', () => {
   });
 
   it('falls back to the full list for an unknown id and handles an empty list', () => {
-    expect(studyList(words, 'nope', 'all').list).toHaveLength(4);
+    const unknown = studyList(words, 'nope', 'all');
+    expect(unknown.list).toHaveLength(4);
+    expect(unknown.start).toBe(0);
     expect(studyList([], undefined, 'all')).toEqual({ list: [], start: 0 });
+  });
+
+  it('falls back to the active chapter for an unknown id', () => {
+    const { list, start } = studyList(words, 'nope', 'Day 2');
+    expect(list.map((word) => word.id)).toEqual(['a', 'c']);
+    expect(start).toBe(0);
   });
 });

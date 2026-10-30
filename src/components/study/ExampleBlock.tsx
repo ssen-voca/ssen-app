@@ -29,7 +29,7 @@ export function ExampleBlock({ word, open, onToggle }: Props) {
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        accessibilityLabel={hasTranslation ? '예문 — 눌러서 한국어 해석 보기' : '예문'}
+        accessibilityLabel={hasTranslation ? `${example || '예문'} — 눌러서 한국어 해석 보기` : example}
         disabled={!hasTranslation}
         onPress={onToggle}
         style={[styles.line, styles.lineEn]}
@@ -83,6 +83,6 @@ const styles = StyleSheet.create({
   strong: { color: colors.text, fontWeight: '800' },
   missing: { color: '#a4ada7', fontSize: 13 },
   // 가려진 맥락 뜻: 글자 폭은 그대로 두고 회색 블록으로 가린다.
-  masked: { backgroundColor: '#e9edf2', color: 'transparent' },
+  masked: { backgroundColor: '#e9edf2', color: 'transparent', fontWeight: '800' },
   shown: { backgroundColor: colors.accentSoft, color: colors.text, fontWeight: '800' },
 });
