@@ -44,14 +44,14 @@ export function WordRow({ word, prefs, shown, onToggleField, onOpen, onEdit, onD
         style={styles.wordCol}
       >
         <Masked masked={wordMasked}>
-          <AppText role="heading" style={styles.title}>
+          <AppText style={styles.title}>
             {word.word}
           </AppText>
         </Masked>
       </Pressable>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={meaningMasked ? '가려진 뜻 보기' : `${word.word} 학습하기`}
+        accessibilityLabel={meaningMasked ? '가려진 뜻 보기' : `${word.word}: ${word.meanings.join(', ')} — 학습하기`}
         onPress={() => (meaningMasked ? onToggleField('meaning') : onOpen())}
         style={styles.meaningCol}
       >

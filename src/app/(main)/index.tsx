@@ -129,7 +129,7 @@ export default function WordbookScreen() {
             <AppText style={styles.emptyIconText}>Aa</AppText>
           </View>
           <AppText role="heading" style={styles.emptyTitle}>
-            {searching ? '검색 결과가 없어요' : '이 챕터에는 단어가 없어요'}
+            {searching ? '검색 결과가 없어요' : '단어장에 단어가 없어요'}
           </AppText>
           <AppText style={styles.emptyText}>
             {searching ? '다른 단어나 뜻으로 검색해 보세요.' : '직접 입력하거나 사진·엑셀 파일을 불러와 보세요.'}

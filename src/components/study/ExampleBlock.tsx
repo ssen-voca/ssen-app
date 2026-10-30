@@ -53,7 +53,7 @@ export function ExampleBlock({ word, open, onToggle }: Props) {
       {open && hasTranslation && (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="한국어 해석 — 누르고 있는 동안 가려진 뜻 보기"
+          accessibilityLabel={`한국어 해석: ${exampleKo} — 누르고 있는 동안 가려진 뜻 보기`}
           {...holdProps(setHeld)}
           style={[styles.line, styles.lineKo, HOLD_STYLE]}
         >

@@ -20,6 +20,7 @@ function loadPretendard() {
   const css = document.createElement('link');
   css.id = 'pretendard-css';
   css.rel = 'stylesheet';
+  css.referrerPolicy = 'no-referrer';
   css.href = PRETENDARD_CSS;
   document.head.append(preconnect, css);
 }

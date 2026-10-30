@@ -1,15 +1,14 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { AppText } from './AppText';
 
 type Props = {
   masked: boolean;
-  onPress?: () => void;
   style?: StyleProp<ViewStyle>;
   children: ReactNode;
 };
 
-export function Masked({ masked, onPress, style, children }: Props) {
+export function Masked({ masked, style, children }: Props) {
   const content = masked ? (
     <>
       <View aria-hidden style={styles.hidden}>
@@ -22,20 +21,7 @@ export function Masked({ masked, onPress, style, children }: Props) {
   ) : (
     children
   );
-  const containerStyle = [style, masked && styles.masked];
-  if (!onPress) {
-    return <View style={containerStyle}>{content}</View>;
-  }
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={masked ? '가려진 내용 보기' : undefined}
-      onPress={onPress}
-      style={containerStyle}
-    >
-      {content}
-    </Pressable>
-  );
+  return <View style={[style, masked && styles.masked]}>{content}</View>;
 }
 
 const styles = StyleSheet.create({

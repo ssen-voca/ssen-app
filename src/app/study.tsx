@@ -8,6 +8,7 @@ import { ExampleBlock } from '../components/study/ExampleBlock';
 import { MeaningRow } from '../components/study/MeaningRow';
 import { startStudy, studyList, studyReducer, swipeDirection, wheelStep } from '../data/study';
 import { useWords } from '../data/WordsContext';
+import { effectiveChapter } from '../data/wordList';
 import { colors, fonts, isNarrow } from '../theme';
 
 const MOVE_HINT = '⇆  스크롤 · 좌우 밀기로 다음 단어';
@@ -42,7 +43,8 @@ export default function StudyScreen() {
 
 function StudyBody({ wordId }: { wordId?: string }) {
   const { words, prefs } = useWords();
-  const { list, start } = useMemo(() => studyList(words, wordId, prefs.activeChapter), [words, wordId, prefs.activeChapter]);
+  const chapter = effectiveChapter(words, prefs.activeChapter);
+  const { list, start } = useMemo(() => studyList(words, wordId, chapter), [words, wordId, chapter]);
   const total = list.length;
   const [state, dispatch] = useReducer(studyReducer, start, startStudy);
   const insets = useSafeAreaInsets();

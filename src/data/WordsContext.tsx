@@ -49,6 +49,7 @@ export function WordsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (ready && effectiveChapter(words, prefs.activeChapter) !== prefs.activeChapter) {
       setPrefs((current) => ({ ...current, activeChapter: 'all' }));
+      setShown({});
     }
   }, [ready, words, prefs.activeChapter]);
 
