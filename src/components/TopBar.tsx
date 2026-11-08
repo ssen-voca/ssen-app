@@ -1,3 +1,9 @@
+import { usePathname } from 'expo-router';
+import { useBookView } from '../data/BookViewContext';
+import { useBookmarks } from '../bookmarks/BookmarksContext';
+import { useAuth } from '../auth/AuthContext';
+import { dayOptions } from '../data/wordList';
+import { DayPicker } from './wordbook/DayPicker';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWords } from '../data/WordsContext';
@@ -7,8 +13,12 @@ import { Icon } from './Icon';
 
 export function TopBar() {
   const insets = useSafeAreaInsets();
-  const { prefs } = useWords();
-  const chapterLabel = prefs.activeChapter === 'all' ? '전체' : prefs.activeChapter;
+  const { prefs, words, setPref, setShown } = useWords();
+  const { words: catalog } = useBookmarks();
+  const { user } = useAuth();
+  const path = usePathname(); const mine = path === '/my-voca';
+  const { home, my, update } = useBookView(); const view = mine ? my : home;
+  const book = path === '/' || mine;
   return (
     <View style={[styles.bar, { paddingTop: 12 + insets.top, height: 76 + insets.top }]}>
       <View style={styles.brand}>
@@ -23,15 +33,12 @@ export function TopBar() {
         </View>
       </View>
       <View style={styles.actions}>
-        <Pressable disabled accessibilityRole="button" accessibilityLabel="학습 챕터 선택 (준비 중)" style={styles.chapter}>
-          <AppText numberOfLines={1} style={styles.chapterText}>
-            {chapterLabel}
-          </AppText>
-          <Icon name="chevronDown" size={16} color="#4f5b6b" />
-        </Pressable>
-        <Pressable disabled accessibilityRole="button" accessibilityLabel="표시 정보 설정 (준비 중)" style={styles.iconButton}>
-          <Icon name="filter" size={24} color={colors.text} />
-        </Pressable>
+        {book && <>
+        <View style={{ width: 130 }}><DayPicker compact options={dayOptions(user ? catalog : words)} value={mine ? view.chapter : prefs.activeChapter} onChange={chapter => { update(mine, { chapter, shown: {} }); if (!mine) { setPref('activeChapter', chapter); setShown({}); } }} /></View>
+        <Pressable accessibilityRole="button" accessibilityLabel={view.searchOpen ? '검색 닫기' : '검색 열기'} accessibilityState={{ expanded: view.searchOpen }} onPress={() => update(mine, { searchOpen: !view.searchOpen, query: '' })} style={styles.iconButton}>
+          <Icon name="search" size={22} color={colors.text} />
+        </Pressable></>}
+
       </View>
     </View>
   );
@@ -39,6 +46,7 @@ export function TopBar() {
 
 const styles = StyleSheet.create({
   bar: {
+    zIndex: 30,
     paddingHorizontal: 16,
     paddingBottom: 8,
     flexDirection: 'row',

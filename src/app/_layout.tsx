@@ -5,6 +5,8 @@ import { AuthProvider } from '../auth/AuthContext';
 import { PhoneCanvas } from '../components/PhoneCanvas';
 import { ToastProvider } from '../components/Toast';
 import { WordFormProvider } from '../components/WordFormSheet';
+import { BookmarksProvider } from '../bookmarks/BookmarksContext';
+import { BookViewProvider } from '../data/BookViewContext';
 import { WordsProvider } from '../data/WordsContext';
 
 // 웹 출력이 "single"이라 +html.tsx가 반영되지 않아, 앱 시작 때 Pretendard CSS를 <head>에 한 번 넣는다.
@@ -29,17 +31,17 @@ loadPretendard();
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <WordsProvider>
+      <AuthProvider><WordsProvider>
         <PhoneCanvas>
           <ToastProvider>
-            <AuthProvider>
+            <BookmarksProvider><BookViewProvider>
               <WordFormProvider>
                 <Slot />
               </WordFormProvider>
-            </AuthProvider>
+            </BookViewProvider></BookmarksProvider>
           </ToastProvider>
         </PhoneCanvas>
-      </WordsProvider>
+      </WordsProvider></AuthProvider>
     </GestureHandlerRootView>
   );
 }

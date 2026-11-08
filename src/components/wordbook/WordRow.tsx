@@ -12,8 +12,11 @@ type Props = {
   shown: ShownMap;
   onToggleField: (field: MaskField) => void;
   onOpen: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  bookmarked?: boolean;
+  pending?: boolean;
+  onBookmark?: () => void;
+  onDelete?: () => void;
 };
 
 const hovered = (state: PressableStateCallbackType) => !!(state as PressableStateCallbackType & { hovered?: boolean }).hovered;
@@ -31,7 +34,7 @@ function MiniButton({ icon, label, onPress }: { icon: 'edit' | 'delete'; label: 
   );
 }
 
-export function WordRow({ word, prefs, shown, onToggleField, onOpen, onEdit, onDelete }: Props) {
+export function WordRow({ word, prefs, shown, onToggleField, onOpen, onEdit, onDelete, bookmarked, pending, onBookmark }: Props) {
   const wordMasked = isMasked(prefs, shown, word.id, 'word');
   const meaningMasked = isMasked(prefs, shown, word.id, 'meaning');
 
@@ -62,8 +65,9 @@ export function WordRow({ word, prefs, shown, onToggleField, onOpen, onEdit, onD
         </Masked>
       </Pressable>
       <View style={styles.actions}>
-        <MiniButton icon="edit" label="단어 수정" onPress={onEdit} />
-        <MiniButton icon="delete" label="단어 삭제" onPress={onDelete} />
+        {onBookmark && <Pressable accessibilityRole="button" accessibilityLabel={bookmarked ? '북마크 해제' : 'MY VOCA에 저장'} accessibilityState={{ selected: bookmarked, disabled: pending }} disabled={pending} onPress={onBookmark} style={styles.mini}><Icon name={bookmarked ? 'bookmarkFilled' : 'bookmark'} size={20} color={bookmarked ? colors.accent : colors.muted} /></Pressable>}
+        {onEdit && <MiniButton icon="edit" label="단어 수정" onPress={onEdit} />}
+        {onDelete && <MiniButton icon="delete" label="단어 삭제" onPress={onDelete} />}
       </View>
     </View>
   );

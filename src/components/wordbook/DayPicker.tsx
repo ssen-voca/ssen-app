@@ -1,32 +1,32 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { colors } from '../../theme';
 import type { DayOption } from '../../data/wordList';
 import { AppText } from '../AppText';
 
-type Props = { options: DayOption[]; value: string; onChange: (value: string) => void };
+type Props = { options: DayOption[]; value: string; onChange: (value: string) => void; compact?: boolean };
 
-export function DayPicker({ options, value, onChange }: Props) {
+export function DayPicker({ options, value, onChange, compact = false }: Props) {
   const [open, setOpen] = useState(false);
   const current = options.find((option) => option.value === value) ?? options[0];
 
   return (
-    <View>
+    <View style={compact ? { zIndex: 30 } : undefined}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Day 선택: ${current.label}`}
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen(!open)}
-        style={styles.trigger}
+        style={[styles.trigger, compact && { paddingHorizontal: 8, paddingVertical: 8 }]}
       >
         <AppText style={styles.triggerLabel}>{current.label}</AppText>
-        <AppText style={styles.triggerCount}>{current.count}단어</AppText>
+        {!compact && <AppText style={styles.triggerCount}>{current.count}단어</AppText>}
         <AppText aria-hidden style={styles.chevron}>
           {open ? '▴' : '▾'}
         </AppText>
       </Pressable>
       {open && (
-        <DayOptionList
+        <ScrollView style={compact ? { position: 'absolute', top: 42, right: 0, width: 200, maxHeight: 320, backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.line } : undefined}><DayOptionList
           style={styles.listGap}
           options={options}
           current={current.value}
@@ -34,7 +34,7 @@ export function DayPicker({ options, value, onChange }: Props) {
             setOpen(false);
             onChange(next);
           }}
-        />
+        /></ScrollView>
       )}
     </View>
   );
