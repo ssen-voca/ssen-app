@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 export type IconName =
+  | 'bookmark'
+  | 'bookmarkFilled'
   | 'filter'
   | 'chevronDown'
   | 'account'
@@ -13,6 +15,8 @@ export type IconName =
   | 'test';
 
 const SHAPES: Record<IconName, ReactNode> = {
+  bookmark: <Path d="M6 3h12v18l-6-4-6 4z" />,
+  bookmarkFilled: <Path fill="currentColor" d="M6 3h12v18l-6-4-6 4z" />,
   filter: <Path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6" />,
   chevronDown: <Path d="m7 10 5 5 5-5" />,
   account: (

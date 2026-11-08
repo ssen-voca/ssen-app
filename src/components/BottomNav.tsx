@@ -5,12 +5,13 @@ import { colors, isNarrow } from '../theme';
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
 
-type NavItem = { label: string; icon: IconName; href: '/' | '/study' | '/test' | '/account'; also?: string[] };
+type NavItem = { label: string; icon: IconName; href: '/' | '/study' | '/test' | '/account' | '/my-voca'; also?: string[] };
 
 const ITEMS: NavItem[] = [
   { label: '홈', icon: 'home', href: '/' },
   { label: '학습', icon: 'study', href: '/study' },
   { label: '시험', icon: 'test', href: '/test' },
+  { label: 'MY VOCA', icon: 'bookmark', href: '/my-voca' },
   { label: '내 정보', icon: 'account', href: '/account', also: ['/login', '/signup'] },
 ];
 

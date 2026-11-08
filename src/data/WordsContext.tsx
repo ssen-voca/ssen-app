@@ -1,3 +1,5 @@
+import { useAuth } from '../auth/AuthContext';
+import { getCatalog, savePrivateWord, deletePrivateWord } from '../bookmarks/api';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { DEFAULT_PREFS, loadPrefs, loadWords, savePrefs, saveWords } from './storage';
 import type { Prefs, ShownMap, Word } from './types';
@@ -6,6 +8,7 @@ import { effectiveChapter, removeWord, upsertWord } from './wordList';
 export type SaveResult = 'saved' | 'not-persisted';
 
 type WordsContextValue = {
+  setCatalog: (words: Word[]) => void;
   ready: boolean;
   words: Word[];
   prefs: Prefs;
@@ -19,6 +22,9 @@ type WordsContextValue = {
 const WordsContext = createContext<WordsContextValue | null>(null);
 
 export function WordsProvider({ children }: { children: ReactNode }) {
+  const { user, status } = useAuth();
+  const owner = status === 'authenticated' ? user!.id : null;
+  const [remote, setRemote] = useState<{ owner: number; words: Word[] } | null>(null);
   const [ready, setReady] = useState(false);
   const [words, setWords] = useState<Word[]>([]);
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
@@ -47,11 +53,11 @@ export function WordsProvider({ children }: { children: ReactNode }) {
 
   // 저장된 Day에 단어가 하나도 남지 않으면 전체로 되돌린다(학습·상단 칩·폼이 모두 같은 값을 본다).
   useEffect(() => {
-    if (ready && effectiveChapter(words, prefs.activeChapter) !== prefs.activeChapter) {
+    if (owner === null && ready && effectiveChapter(words, prefs.activeChapter) !== prefs.activeChapter) {
       setPrefs((current) => ({ ...current, activeChapter: 'all' }));
       setShown({});
     }
-  }, [ready, words, prefs.activeChapter]);
+  }, [ready, words, prefs.activeChapter, owner]);
 
   const setPref = useCallback(<K extends keyof Prefs>(key: K, value: Prefs[K]) => {
     setPrefs((current) => ({ ...current, [key]: value }));
@@ -65,22 +71,33 @@ export function WordsProvider({ children }: { children: ReactNode }) {
     return (await saveWords(next)) ? 'saved' : 'not-persisted';
   }, []);
 
-  const saveWord = useCallback((word: Word) => commit(upsertWord(wordsRef.current, word)), [commit]);
+  const saveWord = useCallback(async (word: Word): Promise<SaveResult> => {
+    if (owner === null) return commit(upsertWord(wordsRef.current, word));
+    await savePrivateWord(word);
+    const words = await getCatalog();
+    setRemote({ owner, words });
+    return 'saved';
+  }, [commit, owner]);
 
   const deleteWord = useCallback(
-    (id: string) => {
+    async (id: string): Promise<SaveResult> => {
+      if (owner !== null) {
+        await deletePrivateWord(id);
+        setRemote({ owner, words: await getCatalog() });
+        return 'saved';
+      }
       setShown((current) => {
         const { [id]: _removed, ...rest } = current;
         return rest;
       });
       return commit(removeWord(wordsRef.current, id));
     },
-    [commit],
+    [commit, owner],
   );
 
   const value = useMemo(
-    () => ({ ready, words, prefs, setPref, shown, setShown, saveWord, deleteWord }),
-    [ready, words, prefs, setPref, shown, saveWord, deleteWord],
+    () => ({ setCatalog: (catalog: Word[]) => { if (owner !== null) setRemote({ owner, words: catalog }); }, ready, words: owner === null ? words : remote?.owner === owner ? remote.words : [], prefs, setPref, shown, setShown, saveWord, deleteWord }),
+    [ready, words, prefs, setPref, shown, saveWord, deleteWord, owner, remote],
   );
 
   return <WordsContext.Provider value={value}>{children}</WordsContext.Provider>;
