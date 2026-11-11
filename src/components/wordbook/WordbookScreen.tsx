@@ -6,26 +6,22 @@ import { useMemo } from 'react';
 import {
   Pressable,
   StyleSheet,
-  TextInput,
   useWindowDimensions,
   View,
   type PressableStateCallbackType,
 } from 'react-native';
 import { AppText } from '../AppText';
-import { Icon } from '../Icon';
 import { MainScroll } from '../MainScroll';
 import { useToast } from '../Toast';
-import { NOT_PERSISTED_MESSAGE, useWordForm } from '../WordFormSheet';
 import { MaskPanel } from '../wordbook/MaskPanel';
 import { DayPicker } from '../wordbook/DayPicker';
 import { DaySection } from '../wordbook/DaySection';
 import { WordRow } from '../wordbook/WordRow';
 import { searchWords } from '../../data/filter';
-import { anyCardVisible, toggleAll, toggleField } from '../../data/mask';
-import type { Word } from '../../data/types';
+import { toggleField } from '../../data/mask';
 import { dayOptions, effectiveChapter, groupByChapter } from '../../data/wordList';
 import { useWords } from '../../data/WordsContext';
-import { colors, fonts } from '../../theme';
+import { colors } from '../../theme';
 
 export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
   const local = useWords();
@@ -33,12 +29,17 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
   const { home, my, update } = useBookView(); const view = mine ? my : home;
   const words = user ? saved.words : local.words;
   const source = mine ? words.filter(w => saved.ids.includes(w.id)) : words;
-  const { ready, deleteWord } = local;
+  const { ready } = local;
   const prefs = mine ? view.prefs : local.prefs;
   const shown = mine ? view.shown : local.shown;
   const setShown = (shown: typeof local.shown) => mine ? update(true, { shown }) : local.setShown(shown);
   const setPref: typeof local.setPref = (key, value) => mine ? update(true, { prefs: { ...prefs, [key]: value }, shown: {} }) : local.setPref(key, value);
-  const { open } = useWordForm();
+  // 단어·뜻을 한꺼번에 보이게(켬) 또는 가리게(끔) 한다. MY VOCA는 두 값을 한 번에 바꿔야 앞의 변경이 사라지지 않는다.
+  const toggleAllMasks = () => {
+    const mask = !(prefs.maskWord || prefs.maskMeaning);
+    if (mine) update(true, { prefs: { ...prefs, maskWord: mask, maskMeaning: mask }, shown: {} });
+    else { local.setPref('maskWord', mask); local.setPref('maskMeaning', mask); }
+  };
   const toast = useToast();
   const query = view.query; const setQuery = (query: string) => update(mine, { query });
   const { width } = useWindowDimensions();
@@ -60,20 +61,11 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
     return <MainScroll><AppText>단어장을 불러오는 중이에요…</AppText></MainScroll>;
   }
 
-  const remove = async (word: Word) => {
-    const result = await deleteWord(word.id);
-    toast(result === 'saved' ? `‘${word.word}’ 단어를 삭제했어요` : NOT_PERSISTED_MESSAGE);
-  };
-
   const heroSize = Math.min(30, Math.max(24, width * 0.07));
   const searching = query.trim() !== '';
 
   return (
     <MainScroll>
-      {view.searchOpen && <View style={styles.tools}><View style={styles.search}>
-        <Icon name="search" size={19} color={colors.muted} />
-        <TextInput autoFocus value={query} onChangeText={setQuery} placeholder="단어 또는 뜻 검색" accessibilityLabel="단어 또는 뜻 검색" style={styles.searchInput} />
-      </View></View>}
       <View style={styles.hero}>
         <View style={styles.heroMain}>
           {mine ? (
@@ -90,7 +82,7 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
       {saved.loading && <AppText>단어장을 불러오는 중이에요…</AppText>}
       {!!saved.error && <Pressable accessibilityRole="button" onPress={saved.reload}><AppText>{saved.error} · 다시 시도</AppText></Pressable>}
       {user && !mine && <Pressable accessibilityRole="button" onPress={() => saved.migrate().then(() => toast('기존 기기의 단어를 가져왔어요')).catch(e => toast(e.message))}><AppText style={{ color: colors.accent }}>이 기기의 기존 단어 가져오기</AppText></Pressable>}
-      <MaskPanel prefs={prefs} anyVisible={anyCardVisible(prefs, shown, list)} onToggle={key => setPref(key, !prefs[key])} onRevealAll={() => setShown(toggleAll(prefs, shown, list))} />
+      <MaskPanel prefs={prefs} onToggle={key => setPref(key, !prefs[key])} onToggleAll={toggleAllMasks} />
 
       {groups.length > 0 ? (
         groups.map((group) => (
@@ -106,8 +98,6 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
                 bookmarked={saved.ids.includes(word.id)}
                 pending={saved.pending.has(word.id)}
                 onBookmark={() => saved.toggle(word.id).catch(e => toast(e.message))}
-                onEdit={!user && !mine ? () => open(word.id) : undefined}
-                onDelete={!user && !mine ? () => remove(word) : undefined}
               />
             ))}
           </DaySection>
@@ -118,7 +108,7 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
             <AppText style={styles.emptyIconText}>Aa</AppText>
           </View>
           <AppText role="heading" style={styles.emptyTitle}>
-            {searching ? '검색 결과가 없어요.' : mine ? (source.length === 0 ? '아직 저장한 단어가 없어요.' : '이 Day에 저장한 단어가 없어요.') : '단어장에 단어가 없어요'}
+            {searching ? '검색 결과가 없어요.' : mine ? (source.length === 0 ? '아직 저장한 단어가 없어요.' : '이 Week에 저장한 단어가 없어요.') : '단어장에 단어가 없어요'}
           </AppText>
           <AppText style={styles.emptyText}>
             {searching ? '다른 단어나 뜻으로 검색해 보세요.' : mine ? '홈에서 북마크를 눌러 나만의 단어장을 만들어 보세요.' : '직접 입력하거나 사진·엑셀 파일을 불러와 보세요.'}
@@ -153,20 +143,6 @@ const styles = StyleSheet.create({
   heroMain: { flex: 1, minWidth: 0, zIndex: 20 },
   heroPicker: { marginTop: 12 },
   heroTitle: { fontWeight: '700' },
-  tools: { flexDirection: 'row', gap: 9, marginTop: 18, marginBottom: 12 },
-  search: {
-    flex: 1,
-    height: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-    paddingHorizontal: 13,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-  },
-  searchInput: { flex: 1, minWidth: 0, fontSize: 14, fontFamily: fonts.body, color: colors.text },
   empty: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 20 },
   emptyIcon: {
     width: 64,

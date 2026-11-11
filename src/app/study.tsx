@@ -38,7 +38,7 @@ export default function StudyScreen() {
   const { word: wordParam } = useLocalSearchParams<{ word?: string | string[] }>();
   const wordId = typeof wordParam === 'string' ? wordParam : undefined;
   if (!ready) return <View style={styles.screen} />;
-  // 쿼리나 학습 범위(Day)가 바뀌면 처음부터 다시 시작한다.
+  // 쿼리나 학습 범위(Week)가 바뀌면 처음부터 다시 시작한다.
   return <StudyBody key={`${wordId ?? 'all'}:${effectiveChapter(words, prefs.activeChapter)}`} wordId={wordId} />;
 }
 
@@ -48,7 +48,7 @@ function StudyBody({ wordId }: { wordId?: string }) {
   const { list, start, scope } = useMemo(() => studyList(words, wordId, chapter), [words, wordId, chapter]);
   const options = useMemo(() => dayOptions(words), [words]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const scopeLabel = scope === 'all' ? '전체 Day' : scope;
+  const scopeLabel = scope === 'all' ? '전체 Week' : scope;
   const total = list.length;
   const [state, dispatch] = useReducer(studyReducer, start, startStudy);
   const insets = useSafeAreaInsets();
@@ -147,7 +147,7 @@ function StudyBody({ wordId }: { wordId?: string }) {
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`학습할 Day 선택: ${scopeLabel}`}
+            accessibilityLabel={`학습할 Week 선택: ${scopeLabel}`}
             accessibilityState={{ expanded: pickerOpen }}
             onPress={() => setPickerOpen(!pickerOpen)}
             style={styles.chapter}

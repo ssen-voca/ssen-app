@@ -82,28 +82,28 @@ describe('splitSynonyms', () => {
 });
 
 describe('studyList', () => {
-  const words = [make('a', 'Day 2'), make('b', 'Day 1'), make('c', 'Day 2'), make('d', 'Day 1')];
+  const words = [make('a', 'Week 2'), make('b', 'Week 1'), make('c', 'Week 2'), make('d', 'Week 1')];
 
-  it('opens the word inside its own Day, keeping the stored order', () => {
+  it('opens the word inside its own Week, keeping the stored order', () => {
     const { list, start } = studyList(words, 'c', 'all');
     expect(list.map((word) => word.id)).toEqual(['a', 'c']);
     expect(start).toBe(1);
   });
 
   it('lets the word win over the chapter filter', () => {
-    const { list, start } = studyList(words, 'b', 'Day 2');
+    const { list, start } = studyList(words, 'b', 'Week 2');
     expect(list.map((word) => word.id)).toEqual(['b', 'd']);
     expect(start).toBe(0);
   });
 
-  it('without a word, studies everything in Day order from the first word', () => {
+  it('without a word, studies everything in Week order from the first word', () => {
     const { list, start } = studyList(words, undefined, 'all');
     expect(list.map((word) => word.id)).toEqual(['b', 'd', 'a', 'c']);
     expect(start).toBe(0);
   });
 
   it('without a word, respects an active chapter', () => {
-    expect(studyList(words, undefined, 'Day 2').list.map((word) => word.id)).toEqual(['a', 'c']);
+    expect(studyList(words, undefined, 'Week 2').list.map((word) => word.id)).toEqual(['a', 'c']);
   });
 
   it('falls back to the full list for an unknown id and handles an empty list', () => {
@@ -114,16 +114,16 @@ describe('studyList', () => {
   });
 
   it('falls back to the active chapter for an unknown id', () => {
-    const { list, start } = studyList(words, 'nope', 'Day 2');
+    const { list, start } = studyList(words, 'nope', 'Week 2');
     expect(list.map((word) => word.id)).toEqual(['a', 'c']);
     expect(start).toBe(0);
   });
 
-  it('reports the scope: the word\'s Day, else the active chapter', () => {
-    expect(studyList(words, 'c', 'all').scope).toBe('Day 2');
-    expect(studyList(words, 'b', 'Day 2').scope).toBe('Day 1');
-    expect(studyList(words, undefined, 'Day 2').scope).toBe('Day 2');
-    expect(studyList(words, 'nope', 'Day 1').scope).toBe('Day 1');
+  it('reports the scope: the word\'s Week, else the active chapter', () => {
+    expect(studyList(words, 'c', 'all').scope).toBe('Week 2');
+    expect(studyList(words, 'b', 'Week 2').scope).toBe('Week 1');
+    expect(studyList(words, undefined, 'Week 2').scope).toBe('Week 2');
+    expect(studyList(words, 'nope', 'Week 1').scope).toBe('Week 1');
     expect(studyList(words, undefined, 'all').scope).toBe('all');
   });
 });

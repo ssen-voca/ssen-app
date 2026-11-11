@@ -3,7 +3,7 @@ import { SAMPLE_WORDS } from './samples';
 
 const marked = (segments: Segment[]) => segments.filter((segment) => segment.match).map((segment) => segment.text);
 const joined = (segments: Segment[]) => segments.map((segment) => segment.text).join('');
-const [cultivate] = SAMPLE_WORDS;
+const cultivate = SAMPLE_WORDS.find((word) => word.id === 'sample-cultivate')!;
 
 describe('emphasize (English)', () => {
   it('matches the headword and its common inflections, case-insensitively', () => {
