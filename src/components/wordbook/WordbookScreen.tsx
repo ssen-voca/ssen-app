@@ -17,18 +17,15 @@ import { MainScroll } from '../MainScroll';
 import { useToast } from '../Toast';
 import { NOT_PERSISTED_MESSAGE, useWordForm } from '../WordFormSheet';
 import { MaskPanel } from '../wordbook/MaskPanel';
+import { DayPicker } from '../wordbook/DayPicker';
 import { DaySection } from '../wordbook/DaySection';
 import { WordRow } from '../wordbook/WordRow';
 import { searchWords } from '../../data/filter';
 import { anyCardVisible, toggleAll, toggleField } from '../../data/mask';
 import type { Word } from '../../data/types';
-import { effectiveChapter, groupByChapter } from '../../data/wordList';
+import { dayOptions, effectiveChapter, groupByChapter } from '../../data/wordList';
 import { useWords } from '../../data/WordsContext';
 import { colors, fonts } from '../../theme';
-
-function todayLabel(): string {
-  return new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date());
-}
 
 export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
   const local = useWords();
@@ -48,6 +45,16 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
   const chapter = mine ? view.chapter : effectiveChapter(words, prefs.activeChapter);
   const list = useMemo(() => searchWords(source, query, chapter), [source, query, chapter]);
   const groups = useMemo(() => groupByChapter(list), [list]);
+  const dayPicker = (
+    <DayPicker
+      options={dayOptions(words)}
+      value={chapter}
+      onChange={(next) => {
+        update(mine, { chapter: next, shown: {} });
+        if (!mine) { local.setPref('activeChapter', next); local.setShown({}); }
+      }}
+    />
+  );
 
   if (!ready || (user && saved.loading)) {
     return <MainScroll><AppText>단어장을 불러오는 중이에요…</AppText></MainScroll>;
@@ -68,15 +75,15 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
         <TextInput autoFocus value={query} onChangeText={setQuery} placeholder="단어 또는 뜻 검색" accessibilityLabel="단어 또는 뜻 검색" style={styles.searchInput} />
       </View></View>}
       <View style={styles.hero}>
-        <View>
-          <AppText style={styles.date}>{todayLabel()}</AppText>
-          <AppText role="heading" style={[styles.heroTitle, { fontSize: heroSize, letterSpacing: -0.05 * heroSize }]}>
-            {mine ? '나만의 단어장' : '오늘도 한 단어씩'}
-          </AppText>
-        </View>
-        <View style={styles.countBadge}>
-          <AppText style={styles.countValue}>{list.length}</AppText>
-          <AppText style={styles.countLabel}>단어</AppText>
+        <View style={styles.heroMain}>
+          {mine ? (
+            <>
+              <AppText role="heading" style={[styles.heroTitle, { fontSize: heroSize, letterSpacing: -0.05 * heroSize }]}>
+                나만의 단어장
+              </AppText>
+              <View style={styles.heroPicker}>{dayPicker}</View>
+            </>
+          ) : dayPicker}
         </View>
       </View>
 
@@ -138,25 +145,14 @@ const styles = StyleSheet.create({
   hero: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     paddingTop: 22,
     paddingHorizontal: 2,
     paddingBottom: 18,
   },
-  date: { marginBottom: 7, color: colors.muted, fontSize: 13, fontWeight: '600' },
+  heroMain: { flex: 1, minWidth: 0, zIndex: 20 },
+  heroPicker: { marginTop: 12 },
   heroTitle: { fontWeight: '700' },
-  countBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countValue: { color: colors.accent, fontSize: 21, lineHeight: 21, fontWeight: '700' },
-  countLabel: { marginTop: 5, color: colors.muted, fontSize: 11 },
   tools: { flexDirection: 'row', gap: 9, marginTop: 18, marginBottom: 12 },
   search: {
     flex: 1,

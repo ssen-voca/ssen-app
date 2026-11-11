@@ -19,6 +19,8 @@ type Props = {
   onDelete?: () => void;
 };
 
+const STAR_COLOR = '#f5b301';
+
 const hovered = (state: PressableStateCallbackType) => !!(state as PressableStateCallbackType & { hovered?: boolean }).hovered;
 
 function MiniButton({ icon, label, onPress }: { icon: 'edit' | 'delete'; label: string; onPress: () => void }) {
@@ -65,7 +67,7 @@ export function WordRow({ word, prefs, shown, onToggleField, onOpen, onEdit, onD
         </Masked>
       </Pressable>
       <View style={styles.actions}>
-        {onBookmark && <Pressable accessibilityRole="button" accessibilityLabel={bookmarked ? '북마크 해제' : 'MY VOCA에 저장'} accessibilityState={{ selected: bookmarked, disabled: pending }} disabled={pending} onPress={onBookmark} style={styles.mini}><Icon name={bookmarked ? 'bookmarkFilled' : 'bookmark'} size={20} color={bookmarked ? colors.accent : colors.muted} /></Pressable>}
+        {onBookmark && <Pressable accessibilityRole="button" accessibilityLabel={bookmarked ? '북마크 해제' : 'MY VOCA에 저장'} accessibilityState={{ selected: bookmarked, disabled: pending }} disabled={pending} onPress={onBookmark} style={styles.mini}><Icon name={bookmarked ? 'starFilled' : 'star'} size={20} color={bookmarked ? STAR_COLOR : colors.muted} /></Pressable>}
         {onEdit && <MiniButton icon="edit" label="단어 수정" onPress={onEdit} />}
         {onDelete && <MiniButton icon="delete" label="단어 삭제" onPress={onDelete} />}
       </View>

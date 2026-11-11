@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
   line: { borderLeftWidth: 3, paddingVertical: 4, paddingLeft: 10 },
   lineEn: { borderLeftColor: colors.accent },
   lineKo: { borderLeftColor: '#c88465' },
-  text: { color: '#5e6863', fontSize: 13, lineHeight: 20.8 },
+  text: { color: '#5f5c72', fontSize: 13, lineHeight: 20.8 },
   strong: { color: colors.text, fontWeight: '800' },
-  missing: { color: '#a4ada7', fontSize: 13 },
+  missing: { color: '#a3a0b2', fontSize: 13 },
   // 가려진 맥락 뜻: 글자 폭은 그대로 두고 회색 블록으로 가린다.
   masked: { backgroundColor: '#e9edf2', color: 'transparent', fontWeight: '800' },
   shown: { backgroundColor: colors.accentSoft, color: colors.text, fontWeight: '800' },

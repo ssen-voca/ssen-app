@@ -55,5 +55,5 @@ const styles = StyleSheet.create({
   body: { flex: 1 },
   title: { fontSize: 14, fontWeight: '700' },
   sub: { marginTop: 4, color: colors.muted, fontSize: 11 },
-  chevron: { color: '#a8b4ae', fontSize: 23 },
+  chevron: { color: '#a3a0b2', fontSize: 23 },
 });

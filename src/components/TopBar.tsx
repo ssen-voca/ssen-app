@@ -1,21 +1,13 @@
 import { usePathname } from 'expo-router';
 import { useBookView } from '../data/BookViewContext';
-import { useBookmarks } from '../bookmarks/BookmarksContext';
-import { useAuth } from '../auth/AuthContext';
-import { dayOptions } from '../data/wordList';
-import { DayPicker } from './wordbook/DayPicker';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useWords } from '../data/WordsContext';
 import { colors } from '../theme';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 
 export function TopBar() {
   const insets = useSafeAreaInsets();
-  const { prefs, words, setPref, setShown } = useWords();
-  const { words: catalog } = useBookmarks();
-  const { user } = useAuth();
   const path = usePathname(); const mine = path === '/my-voca';
   const { home, my, update } = useBookView(); const view = mine ? my : home;
   const book = path === '/' || mine;
@@ -28,13 +20,12 @@ export function TopBar() {
         <View style={styles.brandText}>
           <AppText style={styles.eyebrow}>MY VOCAB</AppText>
           <AppText role="heading" numberOfLines={1} style={styles.title}>
-            포켓 단어장
+            독해 VOCA 단어장
           </AppText>
         </View>
       </View>
       <View style={styles.actions}>
         {book && <>
-        <View style={{ width: 130 }}><DayPicker compact options={dayOptions(user ? catalog : words)} value={mine ? view.chapter : prefs.activeChapter} onChange={chapter => { update(mine, { chapter, shown: {} }); if (!mine) { setPref('activeChapter', chapter); setShown({}); } }} /></View>
         <Pressable accessibilityRole="button" accessibilityLabel={view.searchOpen ? '검색 닫기' : '검색 열기'} accessibilityState={{ expanded: view.searchOpen }} onPress={() => update(mine, { searchOpen: !view.searchOpen, query: '' })} style={styles.iconButton}>
           <Icon name="search" size={22} color={colors.text} />
         </Pressable></>}
@@ -59,7 +50,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 13,
-    backgroundColor: '#e5f1ed',
+    backgroundColor: '#ebe5f7',
     alignItems: 'center',
     justifyContent: 'center',
   },

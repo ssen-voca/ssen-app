@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 export type IconName =
-  | 'bookmark'
-  | 'bookmarkFilled'
+  | 'star'
+  | 'starFilled'
   | 'filter'
   | 'chevronDown'
   | 'account'
@@ -11,12 +11,11 @@ export type IconName =
   | 'edit'
   | 'delete'
   | 'study'
-  | 'home'
-  | 'test';
+  | 'home';
 
 const SHAPES: Record<IconName, ReactNode> = {
-  bookmark: <Path d="M6 3h12v18l-6-4-6 4z" />,
-  bookmarkFilled: <Path fill="currentColor" d="M6 3h12v18l-6-4-6 4z" />,
+  star: <Path d="m12 3 2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6-4.4-4.2 6-.9z" />,
+  starFilled: <Path fill="currentColor" d="m12 3 2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6-4.4-4.2 6-.9z" />,
   filter: <Path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6" />,
   chevronDown: <Path d="m7 10 5 5 5-5" />,
   account: (
@@ -45,12 +44,6 @@ const SHAPES: Record<IconName, ReactNode> = {
       <Path d="M9 20a4 4 0 0 1 4-4h6" />
     </>
   ),
-  test: (
-    <>
-      <Path d="M9 4h6M9 20h6M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
-      <Path d="m9 11 2 2 4-4" />
-    </>
-  ),
 };
 
 type Props = { name: IconName; size?: number; color: string };
@@ -62,6 +55,7 @@ export function Icon({ name, size = 24, color }: Props) {
       height={size}
       viewBox="0 0 24 24"
       fill="none"
+      color={color}
       stroke={color}
       strokeWidth={1.8}
       strokeLinecap="round"
