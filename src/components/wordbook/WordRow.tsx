@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View, type PressableStateCallbackType } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { isMasked } from '../../data/mask';
 import type { MaskField, Prefs, ShownMap, Word } from '../../data/types';
 import { cardShadow, colors } from '../../theme';
@@ -12,29 +12,14 @@ type Props = {
   shown: ShownMap;
   onToggleField: (field: MaskField) => void;
   onOpen: () => void;
-  onEdit?: () => void;
   bookmarked?: boolean;
   pending?: boolean;
   onBookmark?: () => void;
-  onDelete?: () => void;
 };
 
-const hovered = (state: PressableStateCallbackType) => !!(state as PressableStateCallbackType & { hovered?: boolean }).hovered;
+const STAR_COLOR = '#4a2c91';
 
-function MiniButton({ icon, label, onPress }: { icon: 'edit' | 'delete'; label: string; onPress: () => void }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={(state) => [styles.mini, hovered(state) && styles.miniHover]}
-    >
-      {(state) => <Icon name={icon} size={18} color={hovered(state) ? colors.text : '#9aa3ae'} />}
-    </Pressable>
-  );
-}
-
-export function WordRow({ word, prefs, shown, onToggleField, onOpen, onEdit, onDelete, bookmarked, pending, onBookmark }: Props) {
+export function WordRow({ word, prefs, shown, onToggleField, onOpen, bookmarked, pending, onBookmark }: Props) {
   const wordMasked = isMasked(prefs, shown, word.id, 'word');
   const meaningMasked = isMasked(prefs, shown, word.id, 'meaning');
 
@@ -65,9 +50,7 @@ export function WordRow({ word, prefs, shown, onToggleField, onOpen, onEdit, onD
         </Masked>
       </Pressable>
       <View style={styles.actions}>
-        {onBookmark && <Pressable accessibilityRole="button" accessibilityLabel={bookmarked ? '북마크 해제' : 'MY VOCA에 저장'} accessibilityState={{ selected: bookmarked, disabled: pending }} disabled={pending} onPress={onBookmark} style={styles.mini}><Icon name={bookmarked ? 'bookmarkFilled' : 'bookmark'} size={20} color={bookmarked ? colors.accent : colors.muted} /></Pressable>}
-        {onEdit && <MiniButton icon="edit" label="단어 수정" onPress={onEdit} />}
-        {onDelete && <MiniButton icon="delete" label="단어 삭제" onPress={onDelete} />}
+        {onBookmark && <Pressable accessibilityRole="button" accessibilityLabel={bookmarked ? '북마크 해제' : 'MY VOCA에 저장'} accessibilityState={{ selected: bookmarked, disabled: pending }} disabled={pending} onPress={onBookmark} style={styles.mini}><Icon name={bookmarked ? 'starFilled' : 'star'} size={20} color={bookmarked ? STAR_COLOR : colors.muted} /></Pressable>}
       </View>
     </View>
   );

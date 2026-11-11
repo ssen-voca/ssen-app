@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   singleLine: { height: 47 },
   // 원본의 textarea는 inline-block이라 아래에 4px 줄 여백이 생긴다.
   textarea: { textAlignVertical: 'top', marginBottom: 4 },
-  inputFocus: { borderColor: colors.accent, backgroundColor: '#fff', boxShadow: '0 0 0 3px rgba(23, 111, 242, 0.1)' },
+  inputFocus: { borderColor: colors.accent, backgroundColor: '#fff', boxShadow: '0 0 0 3px rgba(107, 79, 187, 0.14)' },
   button: { minHeight: 47, paddingHorizontal: 18, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   buttonText: { fontSize: 14, fontWeight: '700' },
   ghost: { backgroundColor: '#eef1f5' },

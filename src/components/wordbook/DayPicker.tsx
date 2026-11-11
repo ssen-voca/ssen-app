@@ -14,7 +14,7 @@ export function DayPicker({ options, value, onChange, compact = false }: Props) 
     <View style={compact ? { zIndex: 30 } : undefined}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Day 선택: ${current.label}`}
+        accessibilityLabel={`Week 선택: ${current.label}`}
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen(!open)}
         style={[styles.trigger, compact && { paddingHorizontal: 8, paddingVertical: 8 }]}
@@ -40,7 +40,7 @@ export function DayPicker({ options, value, onChange, compact = false }: Props) 
   );
 }
 
-/** 펼친 Day 목록. 학습 화면은 칩으로 직접 펼치므로 따로 내보낸다. */
+/** 펼친 Week 목록. 학습 화면은 칩으로 직접 펼치므로 따로 내보낸다. */
 type ListProps = { options: DayOption[]; current: string; onChange: (value: string) => void; style?: StyleProp<ViewStyle> };
 
 export function DayOptionList({ options, current, onChange, style }: ListProps) {

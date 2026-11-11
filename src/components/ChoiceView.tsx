@@ -25,5 +25,5 @@ const styles = StyleSheet.create({
   view: { paddingTop: 58, paddingHorizontal: 2, paddingBottom: 20 },
   kicker: { marginBottom: 11, color: colors.accent, fontSize: 11, fontWeight: '800', letterSpacing: 1.43 },
   title: { fontFamily: fonts.serif, fontSize: 33, lineHeight: 38.28, letterSpacing: -0.99, fontWeight: '700' },
-  description: { marginTop: 15, marginBottom: 32, color: '#83918a', fontSize: 14, lineHeight: 21.7 },
+  description: { marginTop: 15, marginBottom: 32, color: '#8d8a99', fontSize: 14, lineHeight: 21.7 },
 });

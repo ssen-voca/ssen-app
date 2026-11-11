@@ -4,92 +4,73 @@ import type { Prefs } from '../../data/types';
 import { colors } from '../../theme';
 import { AppText } from '../AppText';
 
+// 토글을 켜면 보이고 끄면 가려진다. (저장된 값 maskWord/maskMeaning은 "가림"이 true라서 화면에서는 뒤집어 보여 준다.)
 const SWITCHES = [
-  { key: 'maskWord', label: '영어 가리기' },
-  { key: 'maskMeaning', label: '뜻 가리기' },
+  { key: 'maskWord', label: '단어', description: '단어 보이기' },
+  { key: 'maskMeaning', label: '뜻', description: '뜻 보이기' },
 ] as const;
 
 export type MaskKey = (typeof SWITCHES)[number]['key'];
 
 type Props = {
   prefs: Prefs;
-  anyVisible: boolean;
   onToggle: (key: MaskKey) => void;
-  onRevealAll: () => void;
+  onToggleAll: () => void;
   children?: ReactNode;
 };
 
-export function MaskPanel({ prefs, anyVisible, onToggle, onRevealAll, children }: Props) {
+function Toggle({ label, description, on, onPress }: { label: string; description: string; on: boolean; onPress: () => void }) {
   return (
-    <View accessibilityLabel="암기 가리기 설정" style={styles.panel}>
-      {children ? <View style={styles.slot}>{children}</View> : null}
-      <View style={styles.heading}>
-        <View style={styles.headingLeft}>
-          <View aria-hidden style={styles.spark}>
-            <AppText style={styles.sparkText}>✦</AppText>
-          </View>
-          <AppText style={styles.headingTitle}>암기 모드</AppText>
-        </View>
-        <Pressable accessibilityRole="button" onPress={onRevealAll} style={styles.textButton}>
-          <AppText style={styles.textButtonText}>{anyVisible ? '전체 다시 가리기' : '전체 정답 보기'}</AppText>
-        </Pressable>
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityLabel={description}
+      accessibilityState={{ checked: on }}
+      onPress={onPress}
+      style={[styles.toggle, on && styles.toggleOn]}
+    >
+      <AppText style={[styles.toggleLabel, on && styles.toggleLabelOn]}>{label}</AppText>
+      <View style={[styles.track, on && styles.trackOn]}>
+        <View style={[styles.knob, on && styles.knobOn]} />
       </View>
-      <View style={styles.switchRow}>
-        {SWITCHES.map(({ key, label }) => {
-          const on = prefs[key];
-          return (
-            <Pressable
-              key={key}
-              accessibilityRole="switch"
-              accessibilityLabel={label}
-              accessibilityState={{ checked: on }}
-              onPress={() => onToggle(key)}
-              style={styles.switchItem}
-            >
-              <AppText style={styles.switchLabel}>{label}</AppText>
-              <View style={[styles.track, on && styles.trackOn]}>
-                <View style={[styles.knob, on && styles.knobOn]} />
-              </View>
-            </Pressable>
-          );
-        })}
+    </Pressable>
+  );
+}
+
+export function MaskPanel({ prefs, onToggle, onToggleAll, children }: Props) {
+  return (
+    <View accessibilityLabel="암기 모드" style={styles.panel}>
+      {children ? <View style={styles.slot}>{children}</View> : null}
+      <View style={styles.row}>
+        {SWITCHES.map(({ key, label, description }) => (
+          <Toggle key={key} label={label} description={description} on={!prefs[key]} onPress={() => onToggle(key)} />
+        ))}
+        <Toggle label="전체" description="전체 보이기" on={!prefs.maskWord && !prefs.maskMeaning} onPress={onToggleAll} />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { marginTop: 18, padding: 16, borderRadius: 20, backgroundColor: '#e9f1ec' },
-  slot: { marginBottom: 15 },
-  heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  headingLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  spark: {
-    width: 25,
-    height: 25,
-    borderRadius: 8,
-    backgroundColor: '#d5e9e1',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sparkText: { color: colors.accent, fontSize: 14 },
-  headingTitle: { fontSize: 14, fontWeight: '700' },
-  textButton: { paddingVertical: 5 },
-  textButtonText: { color: colors.accent, fontSize: 12, fontWeight: '700' },
-  switchRow: { flexDirection: 'row', gap: 7 },
-  switchItem: {
+  panel: { marginTop: 12, padding: 8, borderRadius: 16, backgroundColor: '#ece6f8' },
+  slot: { marginBottom: 8 },
+  row: { flexDirection: 'row', gap: 6 },
+  toggle: {
     flex: 1,
-    minHeight: 62,
-    paddingVertical: 10,
-    paddingHorizontal: 7,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 9,
+    gap: 7,
+    minHeight: 36,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.65)',
   },
-  switchLabel: { fontSize: 11, textAlign: 'center' },
-  track: { width: 30, height: 17, borderRadius: 20, backgroundColor: '#b8c9c0' },
+  toggleOn: { backgroundColor: '#fff' },
+  toggleLabel: { fontSize: 13, color: colors.muted },
+  toggleLabelOn: { color: colors.text, fontWeight: '700' },
+  track: { width: 28, height: 16, borderRadius: 20, backgroundColor: '#c4b8df' },
   trackOn: { backgroundColor: colors.accent },
-  knob: { position: 'absolute', left: 2, top: 2, width: 13, height: 13, borderRadius: 6.5, backgroundColor: '#fff' },
-  knobOn: { transform: [{ translateX: 13 }] },
+  knob: { position: 'absolute', left: 2, top: 2, width: 12, height: 12, borderRadius: 6, backgroundColor: '#fff' },
+  knobOn: { transform: [{ translateX: 12 }] },
 });

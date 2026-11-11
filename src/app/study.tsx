@@ -38,7 +38,7 @@ export default function StudyScreen() {
   const { word: wordParam } = useLocalSearchParams<{ word?: string | string[] }>();
   const wordId = typeof wordParam === 'string' ? wordParam : undefined;
   if (!ready) return <View style={styles.screen} />;
-  // 쿼리나 학습 범위(Day)가 바뀌면 처음부터 다시 시작한다.
+  // 쿼리나 학습 범위(Week)가 바뀌면 처음부터 다시 시작한다.
   return <StudyBody key={`${wordId ?? 'all'}:${effectiveChapter(words, prefs.activeChapter)}`} wordId={wordId} />;
 }
 
@@ -48,7 +48,7 @@ function StudyBody({ wordId }: { wordId?: string }) {
   const { list, start, scope } = useMemo(() => studyList(words, wordId, chapter), [words, wordId, chapter]);
   const options = useMemo(() => dayOptions(words), [words]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const scopeLabel = scope === 'all' ? '전체 Day' : scope;
+  const scopeLabel = scope === 'all' ? '전체 Week' : scope;
   const total = list.length;
   const [state, dispatch] = useReducer(studyReducer, start, startStudy);
   const insets = useSafeAreaInsets();
@@ -147,7 +147,7 @@ function StudyBody({ wordId }: { wordId?: string }) {
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`학습할 Day 선택: ${scopeLabel}`}
+            accessibilityLabel={`학습할 Week 선택: ${scopeLabel}`}
             accessibilityState={{ expanded: pickerOpen }}
             onPress={() => setPickerOpen(!pickerOpen)}
             style={styles.chapter}
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: '#e5f0ec',
+    backgroundColor: '#ebe5f7',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 8,
-    backgroundColor: '#e5f0ec',
+    backgroundColor: '#ebe5f7',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   chapterText: { flexShrink: 1, fontSize: 12 },
   chevron: { color: colors.accent, fontSize: 13 },
   picker: { marginTop: 10, borderWidth: 1, borderColor: colors.line, borderRadius: 14, overflow: 'hidden' },
-  count: { color: '#6f7d77', fontSize: 12, fontWeight: '700' },
+  count: { color: '#6f6c80', fontSize: 12, fontWeight: '700' },
   progress: { height: 4, marginTop: 14, borderRadius: 5, overflow: 'hidden', backgroundColor: '#e7e5df' },
   progressFill: { height: 4, borderRadius: 5, backgroundColor: colors.accent },
   contentArea: { flex: 1, minHeight: 0 },
@@ -267,12 +267,12 @@ const styles = StyleSheet.create({
     borderColor: '#eeeae4',
     borderRadius: 20,
     backgroundColor: colors.surface,
-    boxShadow: '0 12px 24px rgba(35, 46, 42, 0.08)',
+    boxShadow: '0 12px 24px rgba(40, 36, 60, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardWord: { fontFamily: fonts.serif, fontWeight: '700', textAlign: 'center' },
-  cardMeta: { marginTop: 9, color: '#88958e', fontSize: 11 },
+  cardMeta: { marginTop: 9, color: '#8d8a99', fontSize: 11 },
   meaningHeading: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   meanings: { gap: 9 },
   example: { marginTop: 16 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, paddingTop: 10 },
-  footerText: { color: '#8b9690', fontSize: 10 },
+  footerText: { color: '#8d8a99', fontSize: 10 },
   footerTextNarrow: { fontSize: 9 },
   footerHint: { flexShrink: 1, color: colors.accent, textAlign: 'right' },
   empty: { alignItems: 'center', paddingTop: 170, paddingHorizontal: 15 },
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     height: 54,
     marginBottom: 15,
     borderRadius: 17,
-    backgroundColor: '#e5f0ec',
+    backgroundColor: '#ebe5f7',
     alignItems: 'center',
     justifyContent: 'center',
   },

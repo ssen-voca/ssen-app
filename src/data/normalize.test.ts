@@ -1,4 +1,4 @@
-import { alignList, blankDetails, normalizeWord, splitMeanings } from './normalize';
+import { alignList, blankDetails, normalizeWord, splitMeanings, weekName } from './normalize';
 import { SAMPLE_WORDS } from './samples';
 
 describe('splitMeanings', () => {
@@ -15,6 +15,19 @@ describe('splitMeanings', () => {
   });
 });
 
+describe('weekName', () => {
+  it('turns legacy "Day N" chapter names into "Week N" and leaves others alone', () => {
+    expect(weekName('Day 3')).toBe('Week 3');
+    expect(weekName(' day12 ')).toBe('Week 12');
+    expect(weekName('Week 2')).toBe('Week 2');
+    expect(weekName('Unit 1')).toBe('Unit 1');
+  });
+
+  it('is applied when a stored word is normalized', () => {
+    expect(normalizeWord({ word: 'a', meanings: ['x'], chapter: 'Day 4' }).chapter).toBe('Week 4');
+  });
+});
+
 describe('alignList', () => {
   it('pads missing entries and drops extras so lengths match the meanings', () => {
     expect(alignList(['a', 'b', 'c'], ['one', ' two '])).toEqual(['one', 'two', '']);
@@ -26,7 +39,7 @@ describe('normalizeWord', () => {
   it('fills defaults for a minimal record', () => {
     const word = normalizeWord({ word: ' resilient ', meanings: ['회복력이 있는'] });
     expect(word.word).toBe('resilient');
-    expect(word.chapter).toBe('Day 1');
+    expect(word.chapter).toBe('Week 1');
     expect(word.synonyms).toEqual(['']);
     expect(word.details).toEqual(blankDetails());
     expect(word.id).not.toBe('');
@@ -50,7 +63,7 @@ describe('normalizeWord', () => {
     expect(word.id).toBe('w1');
     expect(word.meanings).toEqual(['이끌어내다', '유래하다']);
     expect(word.synonyms).toEqual(['', '']);
-    expect(word.chapter).toBe('Day 1');
+    expect(word.chapter).toBe('Week 1');
     expect(word.details).toEqual({ example: 'We derive it.', exampleKo: '', exampleMeaning: '' });
     expect('definitions' in word).toBe(false);
   });

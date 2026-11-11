@@ -4,6 +4,7 @@ import { loadWords } from '../data/storage';
 import { useWords } from '../data/WordsContext';
 import type { Word } from '../data/types';
 import * as api from './api';
+import { loadLocalBookmarks, saveLocalBookmarks, toggleId } from './local';
 
 type State = { owner: number | null; words: Word[]; ids: string[]; loading: boolean; error: string };
 const empty: State = { owner: null, words: [], ids: [], loading: false, error: '' };
@@ -14,6 +15,10 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(empty);
   const [revision, revise] = useState(0);
   const [pending, setPending] = useState(new Set<string>());
+  // 로그인하지 않았을 때는 북마크(별)를 이 기기에만 저장한다.
+  const [localIds, setLocalIds] = useState<string[]>([]);
+  const [localReady, setLocalReady] = useState(false);
+  const localLatest = useRef<string[]>([]);
   const locks = useRef(new Set<string>());
   const owner = status === 'authenticated' ? user!.id : null;
   const current = useRef(owner); current.current = owner;
@@ -26,9 +31,22 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     }).catch(error => { if (active) setState({ ...empty, owner, error: error.message }); });
     return () => { active = false; };
   }, [owner, revision]);
-  const visible = state.owner === owner ? state : empty;
+  useEffect(() => {
+    let active = true;
+    loadLocalBookmarks().then(ids => { if (active) { localLatest.current = ids; setLocalIds(ids); setLocalReady(true); } });
+    return () => { active = false; };
+  }, []);
+  const visible = owner === null ? { ...empty, ids: localIds } : state.owner === owner ? state : empty;
   const toggle = async (id: string) => {
-    if (owner === null) throw new Error('로그인 후 저장할 수 있어요.');
+    if (owner === null) {
+      if (!localReady) return;
+      // 연달아 눌러도 직전 결과 위에서 바꾸도록 최신 값을 ref로 들고 있는다.
+      const next = toggleId(localLatest.current, id);
+      localLatest.current = next;
+      setLocalIds(next);
+      await saveLocalBookmarks(next);
+      return;
+    }
     if (visible.loading || visible.error) throw new Error('단어장을 먼저 다시 불러와 주세요.');
     if (locks.current.has(id)) return;
     const lockSet = locks.current;

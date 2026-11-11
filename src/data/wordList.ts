@@ -14,10 +14,10 @@ export function removeWord(words: Word[], id: string): Word[] {
 }
 
 export function chapterOptions(words: Word[]): string[] {
-  return ['Day 1', ...new Set(words.map((word) => word.chapter).filter((chapter) => chapter && chapter !== 'Day 1'))];
+  return ['Week 1', ...new Set(words.map((word) => word.chapter).filter((chapter) => chapter && chapter !== 'Week 1'))];
 }
 
-/** 챕터 이름을 숫자 순서로 비교한다 (Day 2가 Day 10보다 앞). */
+/** 챕터 이름을 숫자 순서로 비교한다 (Week 2가 Week 10보다 앞). */
 export function compareChapters(a: string, b: string): number {
   return a.localeCompare(b, 'ko', { numeric: true });
 }
@@ -45,10 +45,10 @@ export function effectiveChapter(words: Word[], active: string): string {
   return active === 'all' || words.some((word) => word.chapter === active) ? active : 'all';
 }
 
-/** Day 선택 목록: 전체 + Day별(숫자 순서) 단어 수. 홈과 학습 화면이 함께 쓴다. */
+/** Week 선택 목록: 전체 + Week별(숫자 순서) 단어 수. 홈과 학습 화면이 함께 쓴다. */
 export function dayOptions(words: Word[]): DayOption[] {
   return [
-    { value: 'all', label: '전체 Day', count: words.length },
+    { value: 'all', label: '전체 Week', count: words.length },
     ...groupByChapter(words).map((group) => ({ value: group.chapter, label: group.chapter, count: group.words.length })),
   ];
 }

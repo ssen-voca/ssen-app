@@ -58,7 +58,7 @@ export function buildWord(values: FormValues, id: string, previous?: Word): Buil
       meanings,
       // 동의어는 뜻 순서대로 한 줄씩. 줄 수가 뜻보다 적으면 빈 칸으로 채우고 많으면 남는 줄은 버린다.
       synonyms: alignList(meanings, values.synonyms.split(/\r?\n/)),
-      chapter: values.chapter || 'Day 1',
+      chapter: values.chapter || 'Week 1',
       details,
     },
   };

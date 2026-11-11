@@ -25,6 +25,12 @@ export function alignList(meanings: string[], values: unknown[]): string[] {
   return meanings.map((_, i) => String(values[i] || '').trim());
 }
 
+/** 옛 저장 데이터의 'Day N' 챕터 이름을 'Week N'으로 바꾼다. 그 밖의 이름은 그대로 둔다. */
+export function weekName(chapter: string): string {
+  const match = /^day\s*(\d+)$/i.exec(chapter.trim());
+  return match ? `Week ${match[1]}` : chapter;
+}
+
 export function makeId(): string {
   const cryptoApi = globalThis.crypto;
   return cryptoApi && typeof cryptoApi.randomUUID === 'function' ? cryptoApi.randomUUID() : `${Date.now()}-${Math.random()}`;
@@ -54,7 +60,7 @@ export function normalizeWord(input: unknown): Word {
     word: String(raw.word || '').trim(),
     meanings,
     synonyms: alignList(meanings, synonymSource(raw, rawDetails)),
-    chapter: String(raw.chapter || 'Day 1').trim() || 'Day 1',
+    chapter: weekName(String(raw.chapter || 'Week 1').trim()) || 'Week 1',
     details,
   };
 }

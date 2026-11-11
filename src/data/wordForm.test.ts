@@ -2,7 +2,7 @@ import { blankDetails } from './normalize';
 import type { Word } from './types';
 import { buildWord, emptyForm, formFromWord, type FormValues } from './wordForm';
 
-const base: FormValues = { ...emptyForm('Day 2'), word: 'insight', meaning: '통찰력' };
+const base: FormValues = { ...emptyForm('Week 2'), word: 'insight', meaning: '통찰력' };
 
 function legacy(overrides: Partial<Word['details']> = {}): Word {
   return {
@@ -10,15 +10,15 @@ function legacy(overrides: Partial<Word['details']> = {}): Word {
     word: 'insight',
     meanings: ['통찰력'],
     synonyms: [''],
-    chapter: 'Day 2',
+    chapter: 'Week 2',
     details: { ...blankDetails(), ...overrides },
   };
 }
 
 describe('emptyForm', () => {
   it('starts blank with the given chapter', () => {
-    expect(emptyForm('Day 3')).toEqual({
-      word: '', chapter: 'Day 3', meaning: '', synonyms: '', example: '', exampleKo: '', exampleMeaning: '',
+    expect(emptyForm('Week 3')).toEqual({
+      word: '', chapter: 'Week 3', meaning: '', synonyms: '', example: '', exampleKo: '', exampleMeaning: '',
     });
   });
 });
@@ -34,7 +34,7 @@ describe('buildWord', () => {
     const result = buildWord({ ...base, word: '  insight ', synonyms: ' vision ', chapter: '' }, 'n1');
     expect(result).toEqual({
       ok: true,
-      word: { id: 'n1', word: 'insight', meanings: ['통찰력'], synonyms: ['vision'], chapter: 'Day 1', details: blankDetails() },
+      word: { id: 'n1', word: 'insight', meanings: ['통찰력'], synonyms: ['vision'], chapter: 'Week 1', details: blankDetails() },
     });
   });
 
@@ -88,7 +88,7 @@ describe('buildWord', () => {
 describe('formFromWord', () => {
   it('round-trips through buildWord', () => {
     const word: Word = {
-      id: 'w9', word: 'insight', meanings: ['통찰력', '식견'], synonyms: ['perception, vision', ''], chapter: 'Day 4',
+      id: 'w9', word: 'insight', meanings: ['통찰력', '식견'], synonyms: ['perception, vision', ''], chapter: 'Week 4',
       details: { example: 'E.', exampleKo: '통찰력이 있다', exampleMeaning: '통찰력' },
     };
     const form = formFromWord(word);
