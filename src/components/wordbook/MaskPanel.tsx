@@ -51,7 +51,7 @@ export function MaskPanel({ prefs, onToggle, onToggleAll, children }: Props) {
 }
 
 const styles = StyleSheet.create({
-  panel: { marginTop: 12, padding: 8, borderRadius: 16, backgroundColor: '#ece6f8' },
+  panel: { marginTop: 0, padding: 8, borderRadius: 16, backgroundColor: '#ece6f8' },
   slot: { marginBottom: 8 },
   row: { flexDirection: 'row', gap: 6 },
   toggle: {

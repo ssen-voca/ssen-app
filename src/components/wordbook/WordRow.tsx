@@ -19,7 +19,7 @@ type Props = {
   onExpandedChange?: (expanded: boolean) => void;
 };
 
-const BOOKMARK_COLOR = '#4a2c91';
+const STAR_COLOR = '#4a2c91';
 
 // Pressable cancels long presses when its parent ScrollView takes the gesture.
 export function PeekField({ masked, children, onOpen, style, label }: { masked: boolean; children: ReactNode; onOpen: () => void; style: StyleProp<ViewStyle>; label: string }) {
@@ -67,7 +67,7 @@ export function WordRow({ word, prefs, shown, onOpen, bookmarked, pending, onBoo
         {(overflow || expanded) && <Pressable accessibilityRole="button" accessibilityLabel={expanded ? '뜻 접기' : '뜻 전체 보기'} accessibilityState={{ expanded }} onPress={() => { setExpanded(!expanded); onExpandedChange?.(!expanded); }}><AppText style={{ color: colors.accent, fontSize: 12, paddingTop: 5 }}>{expanded ? '접기' : '더 보기'}</AppText></Pressable>}
       </View>
       <View style={styles.actions}>
-        {onBookmark && <Pressable accessibilityRole="button" accessibilityLabel={bookmarked ? '북마크 해제' : 'MY VOCA에 저장'} accessibilityState={{ selected: bookmarked, disabled: pending }} disabled={pending} onPress={onBookmark} style={styles.mini}><Icon name={bookmarked ? 'bookmarkFilled' : 'bookmark'} size={20} color={bookmarked ? BOOKMARK_COLOR : colors.muted} /></Pressable>}
+        {onBookmark && <Pressable accessibilityRole="button" accessibilityLabel={bookmarked ? '북마크 해제' : 'MY VOCA에 저장'} accessibilityState={{ selected: bookmarked, disabled: pending }} disabled={pending} onPress={onBookmark} style={styles.mini}><Icon name={bookmarked ? 'starFilled' : 'star'} size={20} color={bookmarked ? STAR_COLOR : colors.muted} /></Pressable>}
       </View>
     </View>
   );

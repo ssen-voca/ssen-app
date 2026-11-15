@@ -64,7 +64,7 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
 
   return (
     <MainScroll key={mine ? 'myvoca' : 'wordbook'} initialY={view.scrollY} onScrollY={scrollY => update(mine, { scrollY })} stickyHeaderIndices={[0]}>
-      <View style={{ backgroundColor: colors.bg, zIndex: 10, paddingBottom: 8 }}>
+      <View style={styles.stickyOptions}>
       <View style={styles.hero}>
         <View style={styles.heroMain}>
           {mine ? (
@@ -133,13 +133,22 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
 }
 
 const styles = StyleSheet.create({
+  stickyOptions: {
+    backgroundColor: colors.bg,
+    zIndex: 10,
+    marginHorizontal: -18,
+    paddingHorizontal: 18,
+    paddingBottom: 8,
+    // Cover the side gutters too, and soften the edge where card shadows pass underneath.
+    boxShadow: `0 10px 10px ${colors.bg}`,
+  },
   hero: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     paddingTop: 22,
     paddingHorizontal: 2,
-    paddingBottom: 18,
+    paddingBottom: 10,
   },
   heroMain: { flex: 1, minWidth: 0, zIndex: 20 },
   heroPicker: { marginTop: 12 },

@@ -27,11 +27,11 @@ test('four navigation tabs (no 시험) and a single Week control in place of the
  const output=JSON.stringify(tree.toJSON()); expect(output).toContain('MY VOCA'); expect(output).toContain('독해 VOCA 단어장');
  expect(output).not.toContain('시험'); expect(output).not.toContain('오늘도 한 단어씩');
 });
-test('saved words show a filled bookmark',async()=>{
+test('saved words show a filled star',async()=>{
  mockMine=true; await mount();
  const { Icon }=require('../Icon');
  const names=tree.root.findAllByType(Icon).map(n=>n.props.name);
- expect(names).toContain('bookmarkFilled'); expect(names).not.toContain('star'); expect(names).not.toContain('starFilled');
+ expect(names).toContain('starFilled'); expect(names).not.toContain('bookmark'); expect(names).not.toContain('bookmarkFilled');
 });
 test('header search focuses the input on tap, searches meaning, then clears on close',async()=>{
  await mount(); const input=()=>tree.root.findByType(TextInput);
