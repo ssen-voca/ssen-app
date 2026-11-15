@@ -152,7 +152,7 @@ const WEB_SELECT = {
 
 const WEB_SELECT_FOCUS = {
   borderColor: colors.accent,
-  boxShadow: '0 0 0 3px rgba(23, 111, 242, 0.1)',
+  boxShadow: '0 0 0 3px rgba(107, 79, 187, 0.14)',
   background: '#fff',
 } as const;
 

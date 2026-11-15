@@ -1,3 +1,5 @@
+import { useBookmarks } from '../bookmarks/BookmarksContext';
+import { useAuth } from '../auth/AuthContext';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -34,21 +36,29 @@ function StudyEmpty() {
 }
 
 export default function StudyScreen() {
-  const { ready, words, prefs } = useWords();
-  const { word: wordParam } = useLocalSearchParams<{ word?: string | string[] }>();
+  const { ready, words: localWords, prefs } = useWords();
+  const saved = useBookmarks();
+  const { user } = useAuth();
+  const words = user ? saved.words : localWords;
+  const { word: wordParam, source: sourceParam } = useLocalSearchParams<{ word?: string | string[]; source?: string }>();
+  const source = sourceParam === 'myvoca' ? 'myvoca' : 'wordbook';
   const wordId = typeof wordParam === 'string' ? wordParam : undefined;
-  if (!ready) return <View style={styles.screen} />;
-  // 쿼리나 학습 범위(Day)가 바뀌면 처음부터 다시 시작한다.
-  return <StudyBody key={`${wordId ?? 'all'}:${effectiveChapter(words, prefs.activeChapter)}`} wordId={wordId} />;
+  if (!ready || (user && saved.loading)) return <View style={styles.screen} />;
+  // 쿼리나 학습 범위(Week)가 바뀌면 처음부터 다시 시작한다.
+  return <StudyBody key={`${source}:${wordId ?? 'all'}:${effectiveChapter(words, prefs.activeChapter)}`} wordId={wordId} source={source} />;
 }
 
-function StudyBody({ wordId }: { wordId?: string }) {
-  const { words, prefs, setPref, setShown } = useWords();
-  const chapter = effectiveChapter(words, prefs.activeChapter);
-  const { list, start, scope } = useMemo(() => studyList(words, wordId, chapter), [words, wordId, chapter]);
+function StudyBody({ wordId, source }: { wordId?: string; source: 'wordbook' | 'myvoca' }) {
+  const { words: localWords, prefs } = useWords();
+  const { user } = useAuth();
+  const saved = useBookmarks();
+  const words = user ? saved.words : localWords;
+  const [pickedChapter, setPickedChapter] = useState<string>();
+  const chapter = pickedChapter ?? effectiveChapter(words, prefs.activeChapter);
+  const { list, start, scope } = useMemo(() => studyList(words, pickedChapter === undefined ? wordId : undefined, chapter, source), [words, wordId, chapter, source, pickedChapter]);
   const options = useMemo(() => dayOptions(words), [words]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const scopeLabel = scope === 'all' ? '전체 Day' : scope;
+  const scopeLabel = scope === 'all' ? '전체 Week' : scope;
   const total = list.length;
   const [state, dispatch] = useReducer(studyReducer, start, startStudy);
   const insets = useSafeAreaInsets();
@@ -63,6 +73,7 @@ function StudyBody({ wordId }: { wordId?: string }) {
 
   const move = useCallback(
     (step: number) => {
+      if (total < 2) return;
       dispatch({ type: 'move', step, length: total });
       scrollRef.current?.scrollTo({ y: 0, animated: false });
     },
@@ -117,12 +128,11 @@ function StudyBody({ wordId }: { wordId?: string }) {
     dispatch({ type: 'toggleTranslation' });
   };
 
-  const pickDay = (value: string) => {
+  const pickWeek = (value: string) => {
     setPickerOpen(false);
     if (value === scope) return;
-    setShown({});
-    setPref('activeChapter', value);
-    if (wordId !== undefined) router.setParams({ word: undefined });
+    setPickedChapter(value);
+    dispatch({ type: 'reset' });
   };
 
   const index = state.index >= total ? 0 : state.index;
@@ -140,15 +150,16 @@ function StudyBody({ wordId }: { wordId?: string }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="단어장으로 돌아가기"
-            onPress={() => router.navigate('/')}
+            onPress={() => router.canGoBack() ? router.back() : router.replace(source === 'myvoca' ? '/my-voca' : '/')}
             style={styles.back}
           >
             <AppText style={styles.backText}>←</AppText>
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`학습할 Day 선택: ${scopeLabel}`}
+            accessibilityLabel={`학습할 Week 선택: ${scopeLabel}`}
             accessibilityState={{ expanded: pickerOpen }}
+            disabled={source === 'myvoca'}
             onPress={() => setPickerOpen(!pickerOpen)}
             style={styles.chapter}
           >
@@ -167,7 +178,7 @@ function StudyBody({ wordId }: { wordId?: string }) {
         {pickerOpen && (
           <View style={styles.picker}>
             <ScrollView nestedScrollEnabled style={{ maxHeight: height * 0.45 }}>
-              <DayOptionList options={options} current={scope} onChange={pickDay} />
+              <DayOptionList options={options} current={scope} onChange={pickWeek} />
             </ScrollView>
           </View>
         )}
@@ -220,7 +231,7 @@ function StudyBody({ wordId }: { wordId?: string }) {
       </GestureDetector>
 
       <View style={[styles.footer, { paddingHorizontal: pad, paddingBottom: 23 + insets.bottom }]}>
-        <AppText style={[styles.footerText, narrow && styles.footerTextNarrow]}>{MOVE_HINT}</AppText>
+        <AppText style={[styles.footerText, narrow && styles.footerTextNarrow]}>{total > 1 ? MOVE_HINT : '선택한 단어 학습'}</AppText>
         <AppText style={[styles.footerText, styles.footerHint, narrow && styles.footerTextNarrow]}>{hint}</AppText>
       </View>
     </View>
@@ -234,7 +245,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: '#e5f0ec',
+    backgroundColor: '#ebe5f7',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -244,7 +255,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 8,
-    backgroundColor: '#e5f0ec',
+    backgroundColor: '#ebe5f7',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -252,7 +263,7 @@ const styles = StyleSheet.create({
   chapterText: { flexShrink: 1, fontSize: 12 },
   chevron: { color: colors.accent, fontSize: 13 },
   picker: { marginTop: 10, borderWidth: 1, borderColor: colors.line, borderRadius: 14, overflow: 'hidden' },
-  count: { color: '#6f7d77', fontSize: 12, fontWeight: '700' },
+  count: { color: '#6f6c80', fontSize: 12, fontWeight: '700' },
   progress: { height: 4, marginTop: 14, borderRadius: 5, overflow: 'hidden', backgroundColor: '#e7e5df' },
   progressFill: { height: 4, borderRadius: 5, backgroundColor: colors.accent },
   contentArea: { flex: 1, minHeight: 0 },
@@ -267,12 +278,12 @@ const styles = StyleSheet.create({
     borderColor: '#eeeae4',
     borderRadius: 20,
     backgroundColor: colors.surface,
-    boxShadow: '0 12px 24px rgba(35, 46, 42, 0.08)',
+    boxShadow: '0 12px 24px rgba(40, 36, 60, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardWord: { fontFamily: fonts.serif, fontWeight: '700', textAlign: 'center' },
-  cardMeta: { marginTop: 9, color: '#88958e', fontSize: 11 },
+  cardMeta: { marginTop: 9, color: '#8d8a99', fontSize: 11 },
   meaningHeading: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -285,7 +296,7 @@ const styles = StyleSheet.create({
   meanings: { gap: 9 },
   example: { marginTop: 16 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, paddingTop: 10 },
-  footerText: { color: '#8b9690', fontSize: 10 },
+  footerText: { color: '#8d8a99', fontSize: 10 },
   footerTextNarrow: { fontSize: 9 },
   footerHint: { flexShrink: 1, color: colors.accent, textAlign: 'right' },
   empty: { alignItems: 'center', paddingTop: 170, paddingHorizontal: 15 },
@@ -294,7 +305,7 @@ const styles = StyleSheet.create({
     height: 54,
     marginBottom: 15,
     borderRadius: 17,
-    backgroundColor: '#e5f0ec',
+    backgroundColor: '#ebe5f7',
     alignItems: 'center',
     justifyContent: 'center',
   },

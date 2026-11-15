@@ -25,7 +25,7 @@ describe('loadWords', () => {
     const { words, persist } = await loadWords();
     expect(persist).toBe(true);
     expect(words.map((word) => word.id)).toEqual(['a']);
-    expect(words[0].chapter).toBe('Day 1');
+    expect(words[0].chapter).toBe('Week 1');
   });
 
   it('keeps an intentionally empty word list', async () => {
@@ -87,7 +87,7 @@ describe('prefs', () => {
   });
 
   it('round-trips through savePrefs', async () => {
-    const prefs = { ...DEFAULT_PREFS, maskMeaning: false, activeChapter: 'Day 2' };
+    const prefs = { ...DEFAULT_PREFS, maskMeaning: false, activeChapter: 'Week 2' };
     await savePrefs(prefs);
     expect(await loadPrefs()).toEqual(prefs);
   });
@@ -102,8 +102,15 @@ describe('legacy prefs', () => {
   it('ignores the removed maskDetails switch', async () => {
     await AsyncStorage.setItem(
       PREFS_KEY,
-      JSON.stringify({ maskWord: true, maskMeaning: false, maskDetails: true, activeChapter: 'Day 2' }),
+      JSON.stringify({ maskWord: true, maskMeaning: false, maskDetails: true, activeChapter: 'Week 2' }),
     );
-    expect(await loadPrefs()).toEqual({ maskWord: true, maskMeaning: false, activeChapter: 'Day 2' });
+    expect(await loadPrefs()).toEqual({ maskWord: true, maskMeaning: false, activeChapter: 'Week 2' });
+  });
+});
+
+describe('legacy chapter names', () => {
+  it('reads a saved "Day N" active chapter as "Week N"', async () => {
+    await AsyncStorage.setItem(PREFS_KEY, JSON.stringify({ activeChapter: 'Day 2' }));
+    expect((await loadPrefs()).activeChapter).toBe('Week 2');
   });
 });

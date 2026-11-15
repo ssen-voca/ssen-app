@@ -4,7 +4,8 @@ import type { ShownMap } from './types';
 
 const allOn = { maskWord: true, maskMeaning: true };
 const allOff = { maskWord: false, maskMeaning: false };
-const [cultivate, resilient] = SAMPLE_WORDS;
+const cultivate = SAMPLE_WORDS.find((word) => word.id === 'sample-cultivate')!;
+const resilient = SAMPLE_WORDS.find((word) => word.id === 'sample-resilient')!;
 
 describe('isMasked', () => {
   it('hides a field only while its switch is on and it has not been revealed', () => {

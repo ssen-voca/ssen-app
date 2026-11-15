@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 16,
     borderRadius: 13,
-    backgroundColor: '#263632',
+    backgroundColor: '#27243a',
     boxShadow: cardShadow,
   },
   text: { color: '#fff', fontSize: 13, fontWeight: '600' },

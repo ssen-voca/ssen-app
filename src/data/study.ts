@@ -4,7 +4,7 @@ import { orderedWords } from './wordList';
 
 export type StudyState = { index: number; translationOpen: boolean };
 
-export type StudyAction = { type: 'move'; step: number; length: number } | { type: 'toggleTranslation' };
+export type StudyAction = { type: 'move'; step: number; length: number } | { type: 'toggleTranslation' } | { type: 'reset' };
 
 export const initialStudy: StudyState = { index: 0, translationOpen: false };
 
@@ -14,6 +14,7 @@ export function startStudy(index: number): StudyState {
 
 export function studyReducer(state: StudyState, action: StudyAction): StudyState {
   switch (action.type) {
+    case 'reset': return initialStudy;
     case 'move': {
       if (action.length <= 0) return state;
       const current = state.index >= action.length ? 0 : state.index;
@@ -49,16 +50,18 @@ export function splitSynonyms(value: string): string[] {
 }
 
 /**
- * 학습 목록과 시작 위치. 단어 id가 있으면 그 단어가 속한 Day의 목록에서 그 단어부터,
+ * 학습 목록과 시작 위치. 단어 id가 있으면 그 단어가 속한 Week의 목록에서 그 단어부터,
  * 없으면(또는 없는 id면) 전체(활성 챕터가 있으면 그 챕터)를 홈 목록과 같은 순서로 첫 단어부터.
- * scope는 목록의 범위('all' 또는 Day 이름).
+ * scope는 목록의 범위('all' 또는 Week 이름).
  */
 export function studyList(
   words: Word[],
   wordId: string | undefined,
   activeChapter: string,
+  source: 'wordbook' | 'myvoca' = 'wordbook',
 ): { list: Word[]; start: number; scope: string } {
   const target = wordId === undefined ? undefined : words.find((word) => word.id === wordId);
+  if (source === 'myvoca') return { list: target ? [target] : [], start: 0, scope: target?.chapter ?? activeChapter };
   if (target) {
     const list = words.filter((word) => word.chapter === target.chapter);
     return { list, start: list.findIndex((word) => word.id === target.id), scope: target.chapter };
