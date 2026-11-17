@@ -15,7 +15,7 @@ export function Masked({ masked, style, children }: Props) {
         {children}
       </View>
       <View style={styles.overlay}>
-        <AppText style={styles.overlayText}>눌러서 보기</AppText>
+        <AppText style={styles.overlayText}>꾹 눌러 보기</AppText>
       </View>
     </>
   ) : (

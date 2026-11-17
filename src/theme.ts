@@ -4,16 +4,16 @@ export const colors = {
   page: '#f4f5f4',
   bg: '#f5f2eb',
   surface: '#fffefd',
-  text: '#24302e',
-  muted: '#8b9692',
+  text: '#27243a',
+  muted: '#8d8a99',
   line: '#e7e3dc',
-  accent: '#2d7b71',
-  accentDark: '#21665f',
-  accentSoft: '#eaf4f0',
+  accent: '#6b4fbb',
+  accentDark: '#553a9e',
+  accentSoft: '#efe9fa',
   danger: '#ef4e4e',
 };
 
-export const cardShadow = '0 10px 24px rgba(38, 48, 42, 0.07)';
+export const cardShadow = '0 10px 24px rgba(40, 36, 60, 0.07)';
 
 // 한글 가독성이 좋은 Pretendard. 웹에서는 src/app/_layout.tsx에서 CSS를 불러오고, 못 불러오면 시스템 한글 글꼴로 대체된다.
 const SANS_WEB =

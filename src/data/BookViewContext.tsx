@@ -2,8 +2,8 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { useAuth } from '../auth/AuthContext';
 import { DEFAULT_PREFS } from './storage';
 import type { Prefs, ShownMap } from './types';
-export type BookView = { chapter: string; query: string; searchOpen: boolean; prefs: Prefs; shown: ShownMap };
-const initial = (): BookView => ({ chapter: 'all', query: '', searchOpen: false, prefs: { ...DEFAULT_PREFS }, shown: {} });
+export type BookView = { chapter: string; query: string; searchOpen: boolean; prefs: Prefs; shown: ShownMap; scrollY: number; expandedIds: string[] };
+const initial = (): BookView => ({ chapter: 'all', query: '', searchOpen: false, prefs: { ...DEFAULT_PREFS }, shown: {}, scrollY: 0, expandedIds: [] });
 const Context = createContext<{ home: BookView; my: BookView; update: (my: boolean, patch: Partial<BookView>) => void }>(null!);
 export function BookViewProvider({ children }: { children: ReactNode }) {
  const { user } = useAuth();

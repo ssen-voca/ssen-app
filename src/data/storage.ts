@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { normalizeWord } from './normalize';
+import { normalizeWord, weekName } from './normalize';
 import { SAMPLE_WORDS } from './samples';
 import type { Prefs, Word } from './types';
 
@@ -63,7 +63,9 @@ export async function loadPrefs(): Promise<Prefs> {
     maskWord: flag('maskWord'),
     maskMeaning: flag('maskMeaning'),
     activeChapter:
-      typeof raw.activeChapter === 'string' && raw.activeChapter !== '' ? raw.activeChapter : DEFAULT_PREFS.activeChapter,
+      typeof raw.activeChapter === 'string' && raw.activeChapter !== ''
+        ? weekName(raw.activeChapter)
+        : DEFAULT_PREFS.activeChapter,
   };
 }
 

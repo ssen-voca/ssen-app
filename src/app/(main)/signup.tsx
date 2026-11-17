@@ -1,15 +1,24 @@
 import { router } from 'expo-router';
-import type { Credentials } from '../../api/auth';
+import { useState } from 'react';
+import { signup, type Credentials } from '../../api/auth';
 import { ChoiceView } from '../../components/ChoiceView';
 import { CredentialsForm } from '../../components/CredentialsForm';
-import { useAuth } from '../../auth/AuthContext';
+import { FormButton } from '../../components/FormControls';
 
 export default function SignupScreen() {
-  const { signup } = useAuth();
+  const [done, setDone] = useState(false);
+  // 가입만 하고 로그인은 하지 않는다. 돌려받은 토큰은 쓰지 않는다.
   const submit = async (credentials: Credentials) => {
     await signup(credentials);
-    router.replace('/account');
+    setDone(true);
   };
+  if (done) {
+    return (
+      <ChoiceView kicker="SIGN UP" title="가입이 완료됐어요" description="이제 로그인해 주세요.">
+        <FormButton label="로그인하러 가기" onPress={() => router.replace('/login')} />
+      </ChoiceView>
+    );
+  }
   return (
     <ChoiceView
       kicker="SIGN UP"

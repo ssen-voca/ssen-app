@@ -24,6 +24,6 @@ const styles = StyleSheet.create({
     borderRadius: CANVAS.radius,
     overflow: 'hidden',
     backgroundColor: colors.bg,
-    boxShadow: '0 0 36px rgba(50, 55, 50, 0.06)',
+    boxShadow: '0 0 36px rgba(40, 36, 60, 0.06)',
   },
 });

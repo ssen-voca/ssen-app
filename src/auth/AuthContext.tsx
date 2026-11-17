@@ -8,7 +8,6 @@ export type AuthStatus = 'loading' | 'anonymous' | 'authenticated' | 'unreachabl
 type AuthContextValue = {
   status: AuthStatus;
   user: User | null;
-  signup: (credentials: Credentials) => Promise<void>;
   login: (credentials: Credentials) => Promise<void>;
   logout: () => Promise<void>;
   retry: () => void;
@@ -17,7 +16,6 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue>({
   status: 'loading',
   user: null,
-  signup: async () => {},
   login: async () => {},
   logout: async () => {},
   retry: () => {},
@@ -73,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [apply],
   );
 
-  const signup = useCallback((credentials: Credentials) => enter(() => authApi.signup(credentials)), [enter]);
   const login = useCallback((credentials: Credentials) => enter(() => authApi.login(credentials)), [enter]);
 
   const logout = useCallback(async () => {
@@ -88,8 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [apply, boot]);
 
   const value = useMemo(
-    () => ({ ...state, signup, login, logout, retry }),
-    [state, signup, login, logout, retry],
+    () => ({ ...state, login, logout, retry }),
+    [state, login, logout, retry],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

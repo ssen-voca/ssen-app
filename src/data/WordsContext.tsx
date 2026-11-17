@@ -51,7 +51,7 @@ export function WordsProvider({ children }: { children: ReactNode }) {
     if (ready) void savePrefs(prefs);
   }, [ready, prefs]);
 
-  // 저장된 Day에 단어가 하나도 남지 않으면 전체로 되돌린다(학습·상단 칩·폼이 모두 같은 값을 본다).
+  // 저장된 Week에 단어가 하나도 남지 않으면 전체로 되돌린다(학습·상단 칩·폼이 모두 같은 값을 본다).
   useEffect(() => {
     if (owner === null && ready && effectiveChapter(words, prefs.activeChapter) !== prefs.activeChapter) {
       setPrefs((current) => ({ ...current, activeChapter: 'all' }));
