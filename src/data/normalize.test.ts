@@ -28,6 +28,25 @@ describe('weekName', () => {
   });
 });
 
+describe('Excel-only fields', () => {
+  it('keeps number, parts of speech (aligned to the meanings) and the used form', () => {
+    const word = normalizeWord({
+      word: 'sustain', meanings: ['지탱하다', '지속하다'], number: 3, partsOfSpeech: ['동사'],
+      details: { example: 'It was sustained.', exampleKo: '유지되었다.', exampleForm: ' sustained ' },
+    });
+    expect(word.number).toBe(3);
+    expect(word.partsOfSpeech).toEqual(['동사', '']);
+    expect(word.details.exampleForm).toBe('sustained');
+  });
+
+  it('leaves the fields out for older data and ignores wrong types', () => {
+    const word = normalizeWord({ word: 'a', meanings: ['x'], number: '3', partsOfSpeech: [1, null], details: { exampleForm: 5 } });
+    expect('number' in word).toBe(false);
+    expect('partsOfSpeech' in word).toBe(false);
+    expect('exampleForm' in word.details).toBe(false);
+  });
+});
+
 describe('alignList', () => {
   it('pads missing entries and drops extras so lengths match the meanings', () => {
     expect(alignList(['a', 'b', 'c'], ['one', ' two '])).toEqual(['one', 'two', '']);

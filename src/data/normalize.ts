@@ -1,6 +1,6 @@
 import type { Word, WordDetails } from './types';
 
-const DETAIL_KEYS: (keyof WordDetails)[] = ['example', 'exampleKo', 'exampleMeaning'];
+const DETAIL_KEYS: ('example' | 'exampleKo' | 'exampleMeaning')[] = ['example', 'exampleKo', 'exampleMeaning'];
 
 type RawWord = {
   id?: unknown;
@@ -8,6 +8,8 @@ type RawWord = {
   meanings?: unknown;
   meaning?: unknown;
   synonyms?: unknown;
+  number?: unknown;
+  partsOfSpeech?: unknown;
   chapter?: unknown;
   details?: unknown;
 };
@@ -55,7 +57,7 @@ export function normalizeWord(input: unknown): Word {
   for (const key of DETAIL_KEYS) {
     details[key] = String(rawDetails[key] ?? '');
   }
-  return {
+  const word: Word = {
     id: typeof raw.id === 'string' && raw.id !== '' ? raw.id : makeId(),
     word: String(raw.word || '').trim(),
     meanings,
@@ -63,4 +65,14 @@ export function normalizeWord(input: unknown): Word {
     chapter: weekName(String(raw.chapter || 'Week 1').trim()) || 'Week 1',
     details,
   };
+  // 교사 엑셀에서 온 선택 값. 없으면 필드 자체를 두지 않아 옛 데이터와 같은 모양으로 남는다.
+  if (typeof raw.number === 'number' && Number.isInteger(raw.number)) word.number = raw.number;
+  if (Array.isArray(raw.partsOfSpeech)) {
+    const parts = alignList(meanings, raw.partsOfSpeech.map((value) => (typeof value === 'string' ? value : '')));
+    if (parts.some(Boolean)) word.partsOfSpeech = parts;
+  }
+  if (typeof rawDetails.exampleForm === 'string' && rawDetails.exampleForm.trim() !== '') {
+    word.details.exampleForm = rawDetails.exampleForm.trim();
+  }
+  return word;
 }

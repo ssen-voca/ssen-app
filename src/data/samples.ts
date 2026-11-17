@@ -6,6 +6,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'universal',
     meanings: ['보편적인, 일반적인', '전 세계의, 우주의'],
     synonyms: ['general, widespread', 'global, worldwide'],
+    partsOfSpeech: ['형용사', '형용사'],
     chapter: 'Week 1',
     details: {
       example: 'Music is a universal language that connects people.',
@@ -18,6 +19,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'originate',
     meanings: ['유래하다, 비롯되다', '시작하다, 만들어 내다'],
     synonyms: ['stem from, arise', 'begin, create'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 1',
     details: {
       example: 'The tradition is believed to originate in ancient Greece.',
@@ -30,6 +32,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'cultivate',
     meanings: ['경작하다, 재배하다', '기르다, 함양하다', '관계를 쌓다'],
     synonyms: ['nurture, develop, foster', 'develop, foster', 'establish, build'],
+    partsOfSpeech: ['동사', '동사', '동사'],
     chapter: 'Week 1',
     details: {
       example: 'The course helps students cultivate critical thinking.',
@@ -42,6 +45,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'resilient',
     meanings: ['회복력이 있는', '탄력 있는'],
     synonyms: ['strong, tough', 'flexible, elastic'],
+    partsOfSpeech: ['형용사', '형용사'],
     chapter: 'Week 1',
     details: {
       example: 'She remained resilient through every change.',
@@ -54,6 +58,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'insight',
     meanings: ['통찰력', '이해'],
     synonyms: ['perception', 'understanding'],
+    partsOfSpeech: ['명사', '명사'],
     chapter: 'Week 1',
     details: {
       example: 'The data gave us a useful insight.',
@@ -66,6 +71,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'ambiguous',
     meanings: ['모호한, 애매한', '두 가지로 해석되는'],
     synonyms: ['vague, unclear', 'equivocal'],
+    partsOfSpeech: ['형용사', '형용사'],
     chapter: 'Week 1',
     details: {
       example: 'The ending of the movie was deliberately ambiguous.',
@@ -78,11 +84,13 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'sustain',
     meanings: ['지탱하다, 떠받치다', '지속하다, 유지하다', '(피해·부상을) 입다'],
     synonyms: ['support, bear', 'maintain, continue', 'suffer, undergo'],
+    partsOfSpeech: ['동사', '동사', '동사'],
     chapter: 'Week 1',
     details: {
       example: 'A strong economy cannot be sustained without trust.',
       exampleKo: '강한 경제는 신뢰 없이는 지속될 수 없다.',
       exampleMeaning: '지속될',
+      exampleForm: 'sustained',
     },
   },
   {
@@ -90,6 +98,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'adapt',
     meanings: ['적응하다', '개작하다'],
     synonyms: ['adjust, adjust to', 'modify, revise'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 1',
     details: {
       example: 'Animals must adapt to changing environments.',
@@ -102,6 +111,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'derive',
     meanings: ['이끌어내다', '유래하다'],
     synonyms: ['obtain, deduce', 'originate, stem'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 2',
     details: {
       example: 'We can derive the formula from this result.',
@@ -114,6 +124,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'thrive',
     meanings: ['번성하다, 잘 자라다', '성공하다'],
     synonyms: ['flourish, prosper', 'succeed, do well'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 2',
     details: {
       example: 'Many plants thrive in warm and humid climates.',
@@ -126,6 +137,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'reluctant',
     meanings: ['꺼리는, 마지못해 하는', '저항하는'],
     synonyms: ['unwilling, hesitant', 'resistant'],
+    partsOfSpeech: ['형용사', '형용사'],
     chapter: 'Week 2',
     details: {
       example: 'She was reluctant to share her opinion in public.',
@@ -138,6 +150,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'imply',
     meanings: ['암시하다, 넌지시 나타내다', '의미하다, 함축하다'],
     synonyms: ['suggest, hint', 'mean, signify'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 2',
     details: {
       example: 'His silence seemed to imply agreement.',
@@ -150,6 +163,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'obtain',
     meanings: ['얻다, 획득하다', '(규칙 등이) 통용되다'],
     synonyms: ['acquire, gain', 'prevail, exist'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 2',
     details: {
       example: 'You need permission to obtain a copy of the file.',
@@ -162,11 +176,13 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'conclude',
     meanings: ['결론짓다', '끝내다'],
     synonyms: ['infer, deduce', 'finish, end'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 2',
     details: {
       example: 'The researchers concluded that the method was effective.',
       exampleKo: '연구자들은 그 방법이 효과적이라고 결론지었다.',
       exampleMeaning: '결론지었다',
+      exampleForm: 'concluded',
     },
   },
   {
@@ -174,6 +190,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'evidence',
     meanings: ['증거, 근거', '징후'],
     synonyms: ['proof, grounds', 'sign, indication'],
+    partsOfSpeech: ['명사', '명사'],
     chapter: 'Week 2',
     details: {
       example: 'There is little evidence to support his claim.',
@@ -186,11 +203,13 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'attribute',
     meanings: ['~의 덕분(탓)으로 돌리다', '속성, 특성'],
     synonyms: ['ascribe, credit', 'feature, quality'],
+    partsOfSpeech: ['동사', '명사'],
     chapter: 'Week 2',
     details: {
       example: 'She attributes her success to hard work.',
       exampleKo: '그녀는 자신의 성공을 노력 덕분으로 돌린다.',
       exampleMeaning: '덕분으로 돌린다',
+      exampleForm: 'attributes',
     },
   },
   {
@@ -198,6 +217,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'enhance',
     meanings: ['높이다, 향상시키다', '강화하다'],
     synonyms: ['improve, boost', 'strengthen, reinforce'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 3',
     details: {
       example: 'Regular exercise can enhance your memory.',
@@ -210,6 +230,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'inevitable',
     meanings: ['불가피한, 피할 수 없는', '필연적인'],
     synonyms: ['unavoidable, certain', 'necessary'],
+    partsOfSpeech: ['형용사', '형용사'],
     chapter: 'Week 3',
     details: {
       example: 'Change is inevitable in any growing company.',
@@ -222,6 +243,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'contribute',
     meanings: ['기여하다, 공헌하다', '기부하다', '(글을) 기고하다'],
     synonyms: ['add to, help', 'donate, give', 'write, submit'],
+    partsOfSpeech: ['동사', '동사', '동사'],
     chapter: 'Week 3',
     details: {
       example: 'Many volunteers contribute to the success of the festival.',
@@ -234,6 +256,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'diverse',
     meanings: ['다양한', '서로 다른'],
     synonyms: ['varied, assorted', 'different, distinct'],
+    partsOfSpeech: ['형용사', '형용사'],
     chapter: 'Week 3',
     details: {
       example: 'The school offers a diverse range of programs.',
@@ -246,6 +269,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'anticipate',
     meanings: ['예상하다, 기대하다', '(미리) 대비하다'],
     synonyms: ['expect, foresee', 'prepare for'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 3',
     details: {
       example: 'Experts anticipate a rise in prices next year.',
@@ -258,6 +282,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'emerge',
     meanings: ['나타나다, 드러나다', '(사실이) 밝혀지다'],
     synonyms: ['appear, arise', 'come to light'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 3',
     details: {
       example: 'New problems emerge as the city grows.',
@@ -270,11 +295,13 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'persist',
     meanings: ['지속되다, 끈질기게 계속되다', '고집하다'],
     synonyms: ['continue, last', 'insist'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 3',
     details: {
       example: 'The fever persisted for several days.',
       exampleKo: '열이 며칠 동안 지속되었다.',
       exampleMeaning: '지속되었다',
+      exampleForm: 'persisted',
     },
   },
   {
@@ -282,6 +309,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'consequence',
     meanings: ['결과', '중요성'],
     synonyms: ['result, outcome', 'importance'],
+    partsOfSpeech: ['명사', '명사'],
     chapter: 'Week 3',
     details: {
       example: 'Every decision has a consequence.',
@@ -294,6 +322,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'implement',
     meanings: ['시행하다, 실행하다', '도구, 기구'],
     synonyms: ['execute, carry out', 'tool, instrument'],
+    partsOfSpeech: ['동사', '명사'],
     chapter: 'Week 4',
     details: {
       example: 'The city plans to implement the new policy in March.',
@@ -306,6 +335,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'genuine',
     meanings: ['진짜의, 진품의', '진심의, 성실한'],
     synonyms: ['authentic, real', 'sincere, honest'],
+    partsOfSpeech: ['형용사', '형용사'],
     chapter: 'Week 4',
     details: {
       example: 'He showed genuine interest in the project.',
@@ -318,6 +348,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'reduce',
     meanings: ['줄이다, 감소시키다', '축소되다'],
     synonyms: ['decrease, cut', 'shrink, diminish'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 4',
     details: {
       example: 'We must reduce waste to protect the environment.',
@@ -330,11 +361,13 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'reveal',
     meanings: ['드러내다, 밝히다', '보여 주다'],
     synonyms: ['disclose, expose', 'show, display'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 4',
     details: {
       example: 'The study revealed a surprising difference between the groups.',
       exampleKo: '그 연구는 두 집단 사이의 놀라운 차이를 밝혔다.',
       exampleMeaning: '밝혔다',
+      exampleForm: 'revealed',
     },
   },
   {
@@ -342,6 +375,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'tend',
     meanings: ['경향이 있다', '돌보다, 보살피다'],
     synonyms: ['be inclined, be likely', 'look after, care for'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 4',
     details: {
       example: 'Teenagers tend to stay up late on weekends.',
@@ -354,6 +388,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'assume',
     meanings: ['추정하다, 가정하다', '(역할·책임을) 맡다'],
     synonyms: ['suppose, presume', 'take on'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 4',
     details: {
       example: 'Many people assume that talent is fixed at birth.',
@@ -366,6 +401,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'considerable',
     meanings: ['상당한', '고려할 만한'],
     synonyms: ['substantial, significant', 'worth considering'],
+    partsOfSpeech: ['형용사', '형용사'],
     chapter: 'Week 4',
     details: {
       example: 'The project required a considerable amount of time.',
@@ -378,6 +414,7 @@ export const SAMPLE_WORDS: Word[] = [
     word: 'encounter',
     meanings: ['우연히 만나다', '(어려움에) 부딪히다'],
     synonyms: ['come across, meet', 'face, experience'],
+    partsOfSpeech: ['동사', '동사'],
     chapter: 'Week 4',
     details: {
       example: 'Travelers often encounter unexpected difficulties.',

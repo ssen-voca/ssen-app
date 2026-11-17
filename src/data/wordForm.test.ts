@@ -97,3 +97,24 @@ describe('formFromWord', () => {
     expect(buildWord(form, 'w9', word)).toEqual({ ok: true, word });
   });
 });
+
+describe('buildWord keeps the Excel-only values when editing', () => {
+  const previous: Word = {
+    id: 'w1', word: 'sustain', meanings: ['지탱하다', '지속하다'], synonyms: ['', ''], chapter: 'Week 1',
+    number: 4, partsOfSpeech: ['동사', '동사'],
+    details: { example: 'It was sustained.', exampleKo: '그것은 유지되었다.', exampleMeaning: '유지', exampleForm: 'sustained' },
+  };
+
+  it('keeps number, parts of speech and the used form while the example is unchanged', () => {
+    const result = buildWord({ ...formFromWord(previous), synonyms: 'support' }, 'w1', previous);
+    expect(result.ok && result.word).toMatchObject({ number: 4, partsOfSpeech: ['동사', '동사'] });
+    expect(result.ok && result.word.details.exampleForm).toBe('sustained');
+  });
+
+  it('drops the used form once the example changes and realigns parts of speech to the meanings', () => {
+    const values = { ...formFromWord(previous), example: 'Changed.', exampleKo: '바뀜.', exampleMeaning: '', meaning: '지탱하다' };
+    const result = buildWord(values, 'w1', previous);
+    expect(result.ok && result.word.details.exampleForm).toBeUndefined();
+    expect(result.ok && result.word.partsOfSpeech).toEqual(['동사']);
+  });
+});

@@ -38,7 +38,7 @@ export function ExampleBlock({ word, open, onToggle }: Props) {
           {example === '' ? (
             <Text style={styles.missing}>영어 예문이 없어요.</Text>
           ) : (
-            emphasize(example, word.word, true).map((segment, i) =>
+            emphasize(example, word.details.exampleForm || word.word, true).map((segment, i) =>
               segment.match ? (
                 <Text key={i} style={styles.strong}>
                   {segment.text}

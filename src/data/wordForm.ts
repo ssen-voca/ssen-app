@@ -13,7 +13,7 @@ export type FormValues = {
 
 export type BuildResult = { ok: true; word: Word } | { ok: false; message: string };
 
-const DETAIL_FIELDS: (keyof WordDetails)[] = ['example', 'exampleKo', 'exampleMeaning'];
+const DETAIL_FIELDS: ('example' | 'exampleKo' | 'exampleMeaning')[] = ['example', 'exampleKo', 'exampleMeaning'];
 
 export function emptyForm(chapter: string): FormValues {
   return { word: '', chapter, meaning: '', synonyms: '', example: '', exampleKo: '', exampleMeaning: '' };
@@ -50,16 +50,21 @@ export function buildWord(values: FormValues, id: string, previous?: Word): Buil
     return { ok: false, message: '사용된 뜻은 한국어 예문에 적힌 표현으로 입력해 주세요' };
   }
 
-  return {
-    ok: true,
-    word: {
-      id,
-      word,
-      meanings,
-      // 동의어는 뜻 순서대로 한 줄씩. 줄 수가 뜻보다 적으면 빈 칸으로 채우고 많으면 남는 줄은 버린다.
-      synonyms: alignList(meanings, values.synonyms.split(/\r?\n/)),
-      chapter: values.chapter || 'Week 1',
-      details,
-    },
+  const built: Word = {
+    id,
+    word,
+    meanings,
+    // 동의어는 뜻 순서대로 한 줄씩. 줄 수가 뜻보다 적으면 빈 칸으로 채우고 많으면 남는 줄은 버린다.
+    synonyms: alignList(meanings, values.synonyms.split(/\r?\n/)),
+    chapter: values.chapter || 'Week 1',
+    details,
   };
+  // 폼에는 없는 엑셀 값(번호, 품사, 예문 활용형)은 고칠 때 그대로 이어 간다.
+  if (previous?.number !== undefined) built.number = previous.number;
+  if (previous?.partsOfSpeech) {
+    const parts = alignList(meanings, previous.partsOfSpeech);
+    if (parts.some(Boolean)) built.partsOfSpeech = parts;
+  }
+  if (previous?.details.exampleForm && !exampleChanged) built.details.exampleForm = previous.details.exampleForm;
+  return { ok: true, word: built };
 }
