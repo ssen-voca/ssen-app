@@ -1,4 +1,4 @@
-import { digitsOnly, validateName, validatePhoneLast4, validateSchool } from './validate';
+import { digitsOnly, filterClassCodeInput, normalizeClassCode, validateClassCode, validateName, validatePhoneLast4, validateSchool } from './validate';
 
 describe('validateName', () => {
   it('accepts normal names, including 50 characters', () => {
@@ -54,5 +54,36 @@ describe('validateSchool', () => {
   it('rejects values longer than 100 characters after trimming', () => {
     expect(validateSchool('a'.repeat(101))).toBe('학교 이름은 100자 이하로 입력해 주세요');
     expect(validateSchool(` ${'a'.repeat(100)} `)).toBeNull();
+  });
+});
+
+describe('normalizeClassCode', () => {
+  it('removes whitespace and uppercases', () => {
+    expect(normalizeClassCode(' abc 234\t')).toBe('ABC234');
+  });
+});
+
+describe('validateClassCode', () => {
+  it('accepts six allowed characters, in any case and with spaces', () => {
+    expect(validateClassCode('ABC234')).toBeNull();
+    expect(validateClassCode(' abc 234 ')).toBeNull();
+    expect(validateClassCode('KMNPQR')).toBeNull();
+  });
+
+  it.each(['', '   '])('asks for a code when %j is empty', (value) => {
+    expect(validateClassCode(value)).toBe('참여 코드를 입력해 주세요');
+  });
+
+  it.each(['ABC23', 'ABC2345', 'ABCDE0', 'ABCDE1', 'ABCDEI', 'ABCDEL', 'ABCDEO', 'ABC-23', '가나다라마바'])('rejects %j', (value) => {
+    expect(validateClassCode(value)).toBe('참여 코드를 확인해 주세요 (영문 대문자·숫자 6자)');
+  });
+});
+
+describe('filterClassCodeInput', () => {
+  it('uppercases, drops spaces and disallowed characters, and caps at 6', () => {
+    expect(filterClassCodeInput('abc 234')).toBe('ABC234');
+    expect(filterClassCodeInput('a0b1-i_l o')).toBe('AB');
+    expect(filterClassCodeInput('ABCDEFGH')).toBe('ABCDEF');
+    expect(filterClassCodeInput('가나')).toBe('');
   });
 });

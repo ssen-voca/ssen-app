@@ -26,6 +26,10 @@ npm run build:web  # dist/ 에 정적 웹 결과물 생성
 
 지금은 웹을 우선합니다. 네이티브 빌드(iOS/Android)는 이후 단계에서 다룹니다.
 
+## 수업 참여
+
+학생은 내 정보 → `수업 참여하기`에서 선생님께 받은 6자리 참여코드를 입력해 수업에 들어가고, 그 수업의 교사 단어장을 함께 봅니다 (#35). 코드를 5번 틀리면 5분간 잠깁니다. 자세한 내용은 [스펙](docs/superpowers/specs/2026-11-22-join-classroom.md).
+
 ## 서버
 
 API 서버는 별도 저장소에 있습니다 → [ssen-server](https://github.com/ssen-voca/ssen-server)

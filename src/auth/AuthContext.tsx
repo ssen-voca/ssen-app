@@ -10,6 +10,7 @@ type AuthContextValue = {
   user: User | null;
   login: (credentials: Credentials) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   retry: () => void;
 };
 
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   login: async () => {},
   logout: async () => {},
+  refreshUser: async () => {},
   retry: () => {},
 });
 
@@ -79,14 +81,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await session.clear();
   }, [apply]);
 
+  // 로그인한 상태에서 사용자 정보만 다시 읽는다. 읽는 동안 로그아웃·재로그인이 있었다면 결과를 버린다.
+  const refreshUser = useCallback(async () => {
+    const mine = epoch.current;
+    const user = await session.call(authApi.getMe);
+    if (!mounted.current || epoch.current !== mine) return;
+    setState((prev) => (prev.status === 'authenticated' ? { status: 'authenticated', user } : prev));
+  }, []);
+
   const retry = useCallback(() => {
     apply('loading');
     void boot();
   }, [apply, boot]);
 
   const value = useMemo(
-    () => ({ ...state, login, logout, retry }),
-    [state, login, logout, retry],
+    () => ({ ...state, login, logout, refreshUser, retry }),
+    [state, login, logout, refreshUser, retry],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

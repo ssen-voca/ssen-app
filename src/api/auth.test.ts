@@ -1,4 +1,4 @@
-import { getMe, login, refresh, signup } from './auth';
+import { getMe, joinClassroom, login, refresh, signup } from './auth';
 import { ApiError, request } from './client';
 
 jest.mock('./client', () => ({ ...jest.requireActual('./client'), request: jest.fn() }));
@@ -88,5 +88,26 @@ describe('auth api response shapes', () => {
   ])('rejects malformed user response %j', async (body) => {
     mockRequest.mockResolvedValue(body);
     await expectBad(getMe('a'));
+  });
+});
+
+describe('joinClassroom', () => {
+  it('posts the code with the access token and returns the classroom', async () => {
+    mockRequest.mockResolvedValueOnce(CLASSROOM);
+    await expect(joinClassroom('tok', 'ABC234')).resolves.toEqual(CLASSROOM);
+    expect(mockRequest).toHaveBeenCalledWith('/api/me/classroom', { method: 'POST', body: { code: 'ABC234' }, token: 'tok' });
+  });
+
+  it.each([undefined, null, 'x', {}, { ...CLASSROOM, id: '3' }, { ...CLASSROOM, name: 5 }, { ...CLASSROOM, code: undefined }])(
+    'rejects malformed response %j',
+    async (body) => {
+      mockRequest.mockResolvedValue(body);
+      await expectBad(joinClassroom('tok', 'ABC234'));
+    },
+  );
+
+  it('passes server errors through', async () => {
+    mockRequest.mockRejectedValue(new ApiError(404, '참여 코드를 확인해 주세요.'));
+    await expect(joinClassroom('tok', 'ZZZZZZ')).rejects.toMatchObject({ status: 404, message: '참여 코드를 확인해 주세요.' });
   });
 });

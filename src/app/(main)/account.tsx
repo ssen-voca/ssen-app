@@ -38,6 +38,14 @@ export default function AccountScreen() {
         }
       >
         {teacher && <ChoiceCard icon="↑" title="단어 엑셀 올리기" sub="수업에 단어를 한꺼번에 올려요" onPress={() => router.push('/upload')} />}
+        {user.role === 'STUDENT' && (
+          <ChoiceCard
+            icon="＋"
+            title={user.classroom ? '수업 바꾸기' : '수업 참여하기'}
+            sub={user.classroom ? '다른 참여코드로 옮겨요' : '선생님께 받은 참여코드로 들어가요'}
+            onPress={() => router.push('/join')}
+          />
+        )}
         <ChoiceCard
           icon="↩"
           title="로그아웃"
