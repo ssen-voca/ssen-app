@@ -59,3 +59,10 @@ export async function refresh(refreshToken: string): Promise<{ accessToken: stri
 export async function getMe(accessToken: string): Promise<User> {
   return toUser(await request<unknown>('/api/users/me', { token: accessToken }));
 }
+
+export async function joinClassroom(accessToken: string, code: string): Promise<Classroom> {
+  const classroom = toClassroom(await request<unknown>('/api/me/classroom', { method: 'POST', body: { code }, token: accessToken }));
+  // 참여 응답은 항상 수업이어야 한다. null이면 잘못된 응답으로 본다.
+  if (!classroom) throw new ApiError(0, BAD_RESPONSE);
+  return classroom;
+}
