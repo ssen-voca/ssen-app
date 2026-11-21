@@ -5,16 +5,16 @@ import { colors } from '../../theme';
 import { AppText } from '../AppText';
 import { HOLD_STYLE, holdProps } from './hold';
 
-type Props = { number: number; meaning: string; synonyms: string };
+type Props = { number: number; meaning: string; synonyms: string; pos?: string };
 
-export function MeaningRow({ number, meaning, synonyms }: Props) {
+export function MeaningRow({ number, meaning, synonyms, pos }: Props) {
   const [held, setHeld] = useState(false);
   const chips = splitSynonyms(synonyms);
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${number}. ${meaning} — 누르고 있는 동안 동의어 보기`}
+      accessibilityLabel={`${number}. ${pos ? `${pos}, ` : ''}${meaning} — 누르고 있는 동안 동의어 보기`}
       {...holdProps(setHeld)}
       style={[styles.row, HOLD_STYLE, held && styles.rowHeld]}
     >
@@ -34,7 +34,10 @@ export function MeaningRow({ number, meaning, synonyms }: Props) {
           )}
         </View>
       ) : (
-        <AppText style={styles.meaning}>{meaning}</AppText>
+        <View style={styles.meaningBox}>
+          {pos ? <AppText style={styles.pos}>{pos}</AppText> : null}
+          <AppText style={styles.meaning}>{meaning}</AppText>
+        </View>
       )}
     </Pressable>
   );
@@ -65,6 +68,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   numberText: { color: colors.accent, fontSize: 11, fontWeight: '800' },
+  meaningBox: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 0 },
+  pos: {
+    paddingVertical: 2,
+    paddingHorizontal: 7,
+    borderRadius: 999,
+    overflow: 'hidden',
+    backgroundColor: colors.accentSoft,
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '700',
+  },
   meaning: { flex: 1, fontSize: 14, lineHeight: 19.6, fontWeight: '700' },
   chips: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
   chip: {

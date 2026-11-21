@@ -217,7 +217,7 @@ function StudyBody({ wordId, source }: { wordId?: string; source: 'wordbook' | '
                   </View>
                   <View style={styles.meanings}>
                     {word.meanings.map((meaning, i) => (
-                      <MeaningRow key={i} number={i + 1} meaning={meaning} synonyms={word.synonyms[i] ?? ''} />
+                      <MeaningRow key={i} number={i + 1} meaning={meaning} synonyms={word.synonyms[i] ?? ''} pos={word.partsOfSpeech?.[i]} />
                     ))}
                   </View>
                   <View style={styles.example}>
