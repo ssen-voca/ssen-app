@@ -30,6 +30,10 @@ npm run build:web  # dist/ 에 정적 웹 결과물 생성
 
 API 서버는 별도 저장소에 있습니다 → [ssen-server](https://github.com/ssen-voca/ssen-server)
 
+## 배포
+
+웹 화면 운영 배포(호스팅 설정, 서버 주소·CORS 맞추기)는 [docs/deploy.md](./docs/deploy.md)를 보세요.
+
 ## 기여 방법
 
 브랜치·커밋·PR 규칙은 [CONTRIBUTING.md](./CONTRIBUTING.md)를 반드시 읽고 따라주세요.
