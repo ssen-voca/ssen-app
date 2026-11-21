@@ -26,12 +26,18 @@ export default function AccountScreen() {
   }
 
   if (status === 'authenticated' && user) {
+    const teacher = user.role === 'TEACHER';
     return (
       <ChoiceView
         kicker="MY ACCOUNT"
-        title={`${user.name}님,\n안녕하세요`}
-        description={[user.school && `학교: ${user.school}`, user.classroom?.name].filter(Boolean).join(' · ') || '소속된 학교 정보가 없어요.'}
+        title={teacher ? `${user.name} 선생님,\n안녕하세요` : `${user.name}님,\n안녕하세요`}
+        description={
+          teacher
+            ? `교사 계정${user.school ? ` · ${user.school}` : ''}`
+            : [user.school && `학교: ${user.school}`, user.classroom?.name].filter(Boolean).join(' · ') || '소속된 학교 정보가 없어요.'
+        }
       >
+        {teacher && <ChoiceCard icon="↑" title="단어 엑셀 올리기" sub="수업에 단어를 한꺼번에 올려요" onPress={() => router.push('/upload')} />}
         <ChoiceCard
           icon="↩"
           title="로그아웃"
