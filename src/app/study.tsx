@@ -174,7 +174,9 @@ function StudyBody({ wordId, source }: { wordId?: string; source: 'wordbook' | '
               {pickerOpen ? '▴' : '▾'}
             </AppText>
           </Pressable>
-          <AppText style={styles.count}>{total ? `${index + 1} / ${total}` : '0 / 0'}</AppText>
+          {source !== 'myvoca' && (
+            <AppText style={styles.count}>{total ? `${index + 1} / ${total}` : '0 / 0'}</AppText>
+          )}
         </View>
         {pickerOpen && (
           <View style={styles.picker}>
@@ -183,9 +185,11 @@ function StudyBody({ wordId, source }: { wordId?: string; source: 'wordbook' | '
             </ScrollView>
           </View>
         )}
-        <View style={styles.progress}>
-          <View style={[styles.progressFill, { width: `${total ? ((index + 1) / total) * 100 : 0}%` }]} />
-        </View>
+        {source !== 'myvoca' && (
+          <View style={styles.progress}>
+            <View style={[styles.progressFill, { width: `${total ? ((index + 1) / total) * 100 : 0}%` }]} />
+          </View>
+        )}
       </View>
 
       <GestureDetector gesture={contentPan} touchAction="pan-y">
