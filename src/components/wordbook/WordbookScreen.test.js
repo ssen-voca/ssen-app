@@ -52,6 +52,43 @@ test('MY VOCA empty state links home',async()=>{
  mockMine=true;mockSaved.ids=[];await mount();expect(JSON.stringify(tree.toJSON())).toContain('아직 저장한 단어가 없어요.');expect(JSON.stringify(tree.toJSON())).toContain('홈으로 이동');
 });
 
+test.each([false, true])('Week counts use the displayed wordbook source (MY VOCA: %s)', async (mine) => {
+ mockMine=mine;
+ mockSaved.words=[...words, {...words[0], id:'c', word:'clarity'}];
+ mockSaved.ids=['a','b'];
+ await mount();
+ const {DayPicker, DayOptionList}=require('./DayPicker');
+ const expected=[
+  {value:'all',label:'전체 Week',count:mine ? 2 : 3},
+  {value:'Week 1',label:'Week 1',count:mine ? 1 : 2},
+  {value:'Week 2',label:'Week 2',count:1},
+ ];
+ expect(tree.root.findByType(DayPicker).props.options).toEqual(expected);
+ await act(async()=>tree.root.findByProps({accessibilityLabel:'Week 선택: 전체 Week'}).props.onPress());
+ expect(tree.root.findByType(DayOptionList).props.options).toEqual(expected);
+ // 검색이나 선택한 Week가 달라져도 집계는 원본 단어장 기준이다.
+ await act(async()=>tree.root.findByType(DayPicker).props.onChange('Week 1'));
+ await act(async()=>tree.root.findByProps({accessibilityLabel:'검색 열기'}).props.onPress());
+ await act(async()=>tree.root.findByType(TextInput).props.onChangeText('통찰'));
+ expect(tree.root.findByType(DayPicker).props.options).toEqual(expected);
+});
+
+test('MY VOCA Week counts update when bookmarks are removed, including zero bookmarks', async () => {
+ mockMine=true; mockSaved.ids=['a','b']; await mount();
+ const {DayPicker}=require('./DayPicker');
+ const rerender=async ids=>{
+  mockSaved={...mockSaved,ids};
+  await act(async()=>tree.update(React.createElement(BookViewProvider,null,React.createElement(TopBar),React.createElement(Screen,{mine:true}),React.createElement(BottomNav))));
+ };
+ await rerender(['a']);
+ expect(tree.root.findByType(DayPicker).props.options).toEqual([
+  {value:'all',label:'전체 Week',count:1},
+  {value:'Week 1',label:'Week 1',count:1},
+ ]);
+ await rerender([]);
+ expect(tree.root.findByType(DayPicker).props.options).toEqual([{value:'all',label:'전체 Week',count:0}]);
+});
+
 test('MY VOCA combines Week and search and distinguishes empty Week',async()=>{
  mockMine=true;await mount();
  const {DayPicker}=require('./DayPicker');

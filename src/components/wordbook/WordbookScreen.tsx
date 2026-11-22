@@ -46,7 +46,7 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
   const groups = useMemo(() => groupByChapter(list), [list]);
   const dayPicker = (
     <DayPicker
-      options={dayOptions(words)}
+      options={dayOptions(source)}
       value={chapter}
       onChange={(next) => {
         update(mine, { chapter: next, shown: {} });
