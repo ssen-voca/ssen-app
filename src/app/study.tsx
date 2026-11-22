@@ -150,7 +150,8 @@ function StudyBody({ wordId, source }: { wordId?: string; source: 'wordbook' | '
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="단어장으로 돌아가기"
-            onPress={() => router.canGoBack() ? router.back() : router.replace(source === 'myvoca' ? '/my-voca' : '/')}
+            // Slot 라우트의 뒤로가기 기록은 진입한 단어장과 다를 수 있어 출처로 돌아간다.
+            onPress={() => router.replace(source === 'myvoca' ? '/my-voca' : '/')}
             style={styles.back}
           >
             <AppText style={styles.backText}>←</AppText>
