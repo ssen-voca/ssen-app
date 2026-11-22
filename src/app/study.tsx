@@ -185,9 +185,11 @@ function StudyBody({ wordId, source }: { wordId?: string; source: 'wordbook' | '
             </ScrollView>
           </View>
         )}
-        <View style={styles.progress}>
-          <View style={[styles.progressFill, { width: `${total ? ((index + 1) / total) * 100 : 0}%` }]} />
-        </View>
+        {source !== 'myvoca' && (
+          <View style={styles.progress}>
+            <View style={[styles.progressFill, { width: `${total ? ((index + 1) / total) * 100 : 0}%` }]} />
+          </View>
+        )}
       </View>
 
       <GestureDetector gesture={contentPan} touchAction="pan-y">
