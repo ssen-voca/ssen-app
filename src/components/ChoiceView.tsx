@@ -4,9 +4,9 @@ import { colors, fonts } from '../theme';
 import { AppText } from './AppText';
 import { MainScroll } from './MainScroll';
 
-type Props = { kicker: string; title: string; description: string; children?: ReactNode };
+type Props = { kicker: string; title: string; description: string; titleIllustration?: ReactNode; children?: ReactNode };
 
-export function ChoiceView({ kicker, title, description, children }: Props) {
+export function ChoiceView({ kicker, title, description, titleIllustration, children }: Props) {
   return (
     <MainScroll>
       <View style={styles.view}>
@@ -14,6 +14,7 @@ export function ChoiceView({ kicker, title, description, children }: Props) {
         <AppText role="heading" style={styles.title}>
           {title}
         </AppText>
+        {titleIllustration}
         <AppText style={styles.description}>{description}</AppText>
         {children}
       </View>
