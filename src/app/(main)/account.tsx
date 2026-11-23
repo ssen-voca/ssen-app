@@ -1,16 +1,18 @@
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useAuth } from '../../auth/AuthContext';
 import { AppText } from '../../components/AppText';
 import { ChoiceCard } from '../../components/ChoiceCard';
 import { ChoiceView } from '../../components/ChoiceView';
 import { FormButton } from '../../components/FormControls';
 import { useToast } from '../../components/Toast';
-import { colors } from '../../theme';
+import { colors, isNarrow } from '../../theme';
 
 export default function AccountScreen() {
   const { status, user, logout, retry } = useAuth();
   const toast = useToast();
+  const { width, fontScale } = useWindowDimensions();
+  const compactIllustration = isNarrow(width) || fontScale > 1.1;
 
   if (status === 'loading') return null;
 
@@ -64,6 +66,15 @@ export default function AccountScreen() {
       kicker="MY ACCOUNT"
       title={'내 단어장을\n더 편하게 사용해요'}
       description="학교와 이름으로 로그인해 보세요. 로그인 없이도 단어장은 계속 쓸 수 있어요."
+      titleIllustration={
+        <Image
+          source={require('../../../assets/seulki-B.png')}
+          resizeMode="contain"
+          accessible={false}
+          aria-hidden
+          style={[styles.illustration, compactIllustration && styles.compactIllustration]}
+        />
+      }
     >
       <ChoiceCard icon="✓" title="로그인" sub="학교, 이름, 휴대폰 번호 뒤 4자리" onPress={() => router.push('/login')} />
       <ChoiceCard icon="＋" title="회원가입" sub="처음이라면 여기서 시작해요" onPress={() => router.push('/signup')} />
@@ -73,6 +84,8 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
+  illustration: { position: 'absolute', top: 67, right: 23, width: 62, height: 94, pointerEvents: 'none' },
+  compactIllustration: { top: 4, width: 35, height: 52 },
   unreachable: { rowGap: 14 },
   unreachableText: { color: colors.danger, fontSize: 13 },
 });

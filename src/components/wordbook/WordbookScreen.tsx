@@ -4,6 +4,7 @@ import { useBookView } from '../../data/BookViewContext';
 import { router } from 'expo-router';
 import { useMemo } from 'react';
 import {
+  Image,
   Pressable,
   StyleSheet,
   useWindowDimensions,
@@ -105,9 +106,21 @@ export default function WordbookScreen({ mine = false }: { mine?: boolean }) {
         ))
       ) : (
         <View style={styles.empty}>
-          <View style={styles.emptyIcon}>
-            <AppText style={styles.emptyIconText}>Aa</AppText>
-          </View>
+          {mine && !searching ? (
+            <View style={styles.emptyIllustrationSlot}>
+              <Image
+                source={require('../../../assets/seulki-E.png')}
+                resizeMode="contain"
+                accessible={false}
+                aria-hidden
+                style={styles.emptyIllustration}
+              />
+            </View>
+          ) : (
+            <View style={styles.emptyIcon}>
+              <AppText style={styles.emptyIconText}>Aa</AppText>
+            </View>
+          )}
           <AppText role="heading" style={styles.emptyTitle}>
             {searching ? '검색 결과가 없어요.' : mine ? (source.length === 0 ? '아직 저장한 단어가 없어요.' : '이 Week에 저장한 단어가 없어요.') : '단어장에 단어가 없어요'}
           </AppText>
@@ -154,6 +167,8 @@ const styles = StyleSheet.create({
   heroPicker: { marginTop: 12 },
   heroTitle: { fontWeight: '700' },
   empty: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 20 },
+  emptyIllustrationSlot: { width: 76, height: 100, marginBottom: 4 },
+  emptyIllustration: { width: '100%', height: '100%', pointerEvents: 'none' },
   emptyIcon: {
     width: 64,
     height: 64,
