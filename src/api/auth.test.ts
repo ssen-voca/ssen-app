@@ -6,7 +6,7 @@ jest.mock('./client', () => ({ ...jest.requireActual('./client'), request: jest.
 const mockRequest = request as jest.MockedFunction<typeof request>;
 const BAD = '서버 응답이 올바르지 않아요';
 const CLASSROOM = { id: 3, name: '겨울 특강 A반', code: 'ABC234' };
-const USER = { id: 1, name: '김', role: 'STUDENT', email: null, school: '동국대부속고', classroom: CLASSROOM };
+const USER = { id: 1, name: '김', role: 'STUDENT', position: null, email: null, school: '동국대부속고', classroom: CLASSROOM };
 const CREDENTIALS = { school: '동국대부속고', name: '김', phoneLast4: '1234' };
 
 async function expectBad(pending: Promise<unknown>) {
@@ -88,6 +88,34 @@ describe('auth api response shapes', () => {
   ])('rejects malformed user response %j', async (body) => {
     mockRequest.mockResolvedValue(body);
     await expectBad(getMe('a'));
+  });
+});
+
+describe('getMe position', () => {
+  const teacher = { ...USER, role: 'TEACHER', classroom: null };
+
+  it('reads the position of teachers and assistants', async () => {
+    mockRequest.mockResolvedValueOnce({ ...teacher, position: 'TEACHER' });
+    await expect(getMe('a')).resolves.toMatchObject({ role: 'TEACHER', position: 'TEACHER' });
+    mockRequest.mockResolvedValueOnce({ ...teacher, position: 'ASSISTANT' });
+    await expect(getMe('a')).resolves.toMatchObject({ role: 'TEACHER', position: 'ASSISTANT' });
+  });
+
+  it('treats a teacher without a position (older server) as a teacher instead of rejecting the response', async () => {
+    mockRequest.mockResolvedValueOnce(teacher);
+    await expect(getMe('a')).resolves.toMatchObject({ position: 'TEACHER' });
+    mockRequest.mockResolvedValueOnce({ ...teacher, position: null });
+    await expect(getMe('a')).resolves.toMatchObject({ position: 'TEACHER' });
+  });
+
+  it('ignores unknown position values rather than breaking sign-in', async () => {
+    mockRequest.mockResolvedValueOnce({ ...teacher, position: 'PRINCIPAL' });
+    await expect(getMe('a')).resolves.toMatchObject({ position: 'TEACHER' });
+  });
+
+  it('never gives students a position, even if the server sends one', async () => {
+    mockRequest.mockResolvedValueOnce({ ...USER, position: 'ASSISTANT' });
+    await expect(getMe('a')).resolves.toMatchObject({ role: 'STUDENT', position: null });
   });
 });
 

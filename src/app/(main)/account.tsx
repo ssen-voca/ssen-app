@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { Image, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { accountHeading } from '../../auth/accountHeading';
 import { useAuth } from '../../auth/AuthContext';
 import { AppText } from '../../components/AppText';
 import { ChoiceCard } from '../../components/ChoiceCard';
@@ -29,16 +30,9 @@ export default function AccountScreen() {
 
   if (status === 'authenticated' && user) {
     const teacher = user.role === 'TEACHER';
+    const { title, description } = accountHeading(user);
     return (
-      <ChoiceView
-        kicker="MY ACCOUNT"
-        title={teacher ? `${user.name} 선생님,\n안녕하세요` : `${user.name}님,\n안녕하세요`}
-        description={
-          teacher
-            ? `교사 계정${user.school ? ` · ${user.school}` : ''}`
-            : [user.school && `학교: ${user.school}`, user.classroom?.name].filter(Boolean).join(' · ') || '소속된 학교 정보가 없어요.'
-        }
-      >
+      <ChoiceView kicker="MY ACCOUNT" title={title} description={description}>
         {teacher && <ChoiceCard icon="↑" title="단어 엑셀 올리기" sub="수업에 단어를 한꺼번에 올려요" onPress={() => router.push('/upload')} />}
         {user.role === 'STUDENT' && (
           <ChoiceCard
