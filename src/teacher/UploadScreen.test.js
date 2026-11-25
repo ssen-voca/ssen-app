@@ -9,7 +9,7 @@ jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({
 jest.mock('../auth/AuthContext', () => ({ useAuth: () => mockAuth }));
 jest.mock('../components/Toast', () => ({ useToast: () => mockToast }));
 jest.mock('../components/MainScroll', () => ({ MainScroll: ({ children }) => children }));
-jest.mock('./api', () => ({ listClassrooms: jest.fn(), createClassroom: jest.fn(), publishWords: jest.fn() }));
+jest.mock('./api', () => ({ listClassrooms: jest.fn(), createClassroom: jest.fn(), publishWords: jest.fn(), getClassroomWords: jest.fn() }));
 jest.mock('./readWorkbook', () => ({ readWorkbook: jest.fn() }));
 const api = require('./api');
 const { readWorkbook } = require('./readWorkbook');
@@ -42,6 +42,8 @@ async function pickFile(file = FILE) {
   });
 }
 const press = (label) => act(async () => buttonByText(label).props.onPress());
+const toggle = () => tree.root.findAll((n) => n.props.accessibilityRole === 'checkbox' && typeof n.props.onPress === 'function' && typeof n.type !== 'string')[0];
+const flip = () => act(async () => toggle().props.onPress());
 const radios = () => tree.root.findAll((n) => n.props.accessibilityRole === 'radio' && typeof n.props.onPress === 'function' && typeof n.type !== 'string');
 
 beforeEach(() => {
@@ -49,6 +51,7 @@ beforeEach(() => {
   api.listClassrooms.mockResolvedValue([A, B]);
   api.createClassroom.mockResolvedValue({ id: 3, name: '새 반', code: 'NEW234', createdAt: '' });
   api.publishWords.mockResolvedValue({ created: 2, updated: 0 });
+  api.getClassroomWords.mockResolvedValue([]);
   readWorkbook.mockResolvedValue(GOOD);
   jest.replaceProperty(Platform, 'OS', 'web');
 });
@@ -217,5 +220,128 @@ describe('publishing', () => {
     expect(text()).toContain('단어는 한 번에 2000개까지 올릴 수 있어요');
     expect(text()).toContain('Week 1 · 2단어');
     expect(buttonByText('2개 단어 올리기').props.disabled).toBe(false);
+  });
+});
+
+describe('replace option', () => {
+  const cw = (id, word, chapter) => ({ id, word, meanings: ['뜻'], synonyms: [''], chapter, details: { example: '', exampleKo: '', exampleMeaning: '' } });
+  // 파일(Week 1: study, insight) 기준: old 둘은 지워지고, 대소문자·공백만 다른 단어와 파일에 없는 차시(Week 2)는 남는다.
+  const CURRENT = [cw('a', 'study', 'Week 1'), cw('b', ' INSIGHT ', 'Week 1'), cw('c', 'old', 'Week 1'), cw('d', 'older', 'Week 1'), cw('e', 'other', 'Week 2')];
+  async function ready() {
+    api.getClassroomWords.mockResolvedValue(CURRENT);
+    await mount();
+    await act(async () => radios()[0].props.onPress());
+    await pickFile();
+  }
+
+  it('is off by default and unchecked again when another file is chosen', async () => {
+    await ready();
+    expect(toggle().props.accessibilityState.checked).toBe(false);
+    expect(text()).toContain('이 파일에 없는 단어는 지우기 (차시 단위로 교체)');
+    await flip();
+    expect(toggle().props.accessibilityState.checked).toBe(true);
+    await pickFile();
+    expect(toggle().props.accessibilityState.checked).toBe(false);
+  });
+
+  it('previews the words that would be removed and relabels the button', async () => {
+    await ready();
+    expect(api.getClassroomWords).not.toHaveBeenCalled();
+    await flip();
+    expect(api.getClassroomWords).toHaveBeenCalledWith(1);
+    expect(text()).toContain('지워질 단어 2개');
+    expect(text()).toContain('Week 1 · old');
+    expect(text()).toContain('Week 1 · older');
+    expect(text()).not.toContain('Week 2 · other');
+    expect(text()).toContain('학생이 북마크한 단어도 함께 사라져요.');
+    expect(buttonByText('2개 올리고 2개 지우기').props.disabled).toBe(false);
+  });
+
+  it('lists at most 20 removed words and counts the rest', async () => {
+    api.getClassroomWords.mockResolvedValue(Array.from({ length: 25 }, (_, i) => cw('x' + i, 'gone' + i, 'Week 1')));
+    await mount();
+    await act(async () => radios()[0].props.onPress());
+    await pickFile();
+    await flip();
+    expect(text()).toContain('지워질 단어 25개');
+    expect(text().match(/Week 1 · gone/g)).toHaveLength(20);
+    expect(text()).toContain('외 5개');
+  });
+
+  it('says nothing is removed when the file covers everything', async () => {
+    api.getClassroomWords.mockResolvedValue([cw('a', 'study', 'Week 1')]);
+    await mount();
+    await act(async () => radios()[0].props.onPress());
+    await pickFile();
+    await flip();
+    expect(text()).toContain('지워질 단어가 없어요.');
+    expect(text()).not.toContain('학생이 북마크한 단어도 함께 사라져요.');
+    expect(buttonByText('2개 올리고 0개 지우기').props.disabled).toBe(false);
+  });
+
+  it('sends replace and reports the deleted count', async () => {
+    api.publishWords.mockResolvedValue({ created: 0, updated: 2, deleted: 2 });
+    await ready();
+    await flip();
+    await press('2개 올리고 2개 지우기');
+    expect(api.publishWords).toHaveBeenCalledWith(1, expect.any(Array), { replace: true });
+    expect(text()).toContain('새로 0개, 고친 2개, 지운 2개를 올렸어요.');
+    expect(mockToast).toHaveBeenCalledWith('새로 0개, 고친 2개, 지운 2개를 올렸어요.');
+  });
+
+  it('blocks publishing while loading and when the current words cannot be loaded', async () => {
+    let resolve;
+    api.getClassroomWords.mockReturnValueOnce(new Promise((r) => (resolve = r)));
+    await mount();
+    await act(async () => radios()[0].props.onPress());
+    await pickFile();
+    await flip();
+    expect(buttonByText('지워질 단어를 확인하는 중이에요').props.disabled).toBe(true);
+    await act(async () => resolve(CURRENT));
+    expect(buttonByText('2개 올리고 2개 지우기').props.disabled).toBe(false);
+
+    api.getClassroomWords.mockRejectedValue(new Error('서버에 문제가 생겼어요'));
+    await flip();
+    await flip();
+    expect(text()).toContain('서버에 문제가 생겼어요');
+    expect(buttonByText('올릴 수 없어요').props.disabled).toBe(true);
+    expect(api.publishWords).not.toHaveBeenCalled();
+    // 끄면 다시 올릴 수 있다.
+    await flip();
+    expect(buttonByText('2개 단어 올리기').props.disabled).toBe(false);
+  });
+
+  it('behaves as before once the toggle is turned off', async () => {
+    await ready();
+    await flip();
+    await flip();
+    expect(text()).not.toContain('지워질 단어');
+    await press('2개 단어 올리기');
+    expect(api.publishWords.mock.calls[0]).toHaveLength(2);
+    expect(text()).toContain('새로 2개, 고친 0개를 올렸어요.');
+  });
+
+  it('discards a late answer after the classroom changes', async () => {
+    let resolve;
+    api.getClassroomWords.mockReturnValueOnce(new Promise((r) => (resolve = r)));
+    await mount();
+    await act(async () => radios()[0].props.onPress());
+    await pickFile();
+    await flip();
+    api.getClassroomWords.mockResolvedValueOnce([cw('z', 'zzz', 'Week 1')]);
+    await act(async () => radios()[1].props.onPress());
+    await act(async () => resolve(CURRENT));
+    expect(api.getClassroomWords).toHaveBeenLastCalledWith(2);
+    expect(text()).toContain('지워질 단어 1개');
+    expect(text()).not.toContain('Week 1 · old');
+  });
+
+  it('does not offer replace while the file has errors', async () => {
+    readWorkbook.mockResolvedValue(BAD);
+    await mount();
+    await act(async () => radios()[0].props.onPress());
+    await pickFile();
+    expect(toggle()).toBeUndefined();
+    expect(api.getClassroomWords).not.toHaveBeenCalled();
   });
 });
