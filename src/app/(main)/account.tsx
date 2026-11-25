@@ -49,6 +49,9 @@ export default function AccountScreen() {
             onPress={() => router.push('/join')}
           />
         )}
+        {user.role === 'STUDENT' && user.classroom && (
+          <ChoiceCard icon="−" title="수업 나가기" sub="선생님이 올린 단어가 보이지 않게 돼요" onPress={() => router.push('/leave-classroom')} />
+        )}
         <ChoiceCard
           icon="↩"
           title="로그아웃"
