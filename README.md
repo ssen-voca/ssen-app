@@ -30,6 +30,10 @@ npm run build:web  # dist/ 에 정적 웹 결과물 생성
 
 학생은 내 정보 → `수업 참여하기`에서 선생님께 받은 6자리 참여코드를 입력해 수업에 들어가고, 그 수업의 교사 단어장을 함께 봅니다 (#35). 코드를 5번 틀리면 5분간 잠깁니다. 자세한 내용은 [스펙](docs/superpowers/specs/2026-11-22-join-classroom.md).
 
+## 회원 탈퇴
+
+학생은 내 정보 → `회원 탈퇴`에서 휴대폰 번호 뒤 4자리를 입력해 계정을 지웁니다. 계정·북마크·내가 만든 단어가 삭제되고 되돌릴 수 없습니다 (#47). 자세한 내용은 [스펙](docs/superpowers/specs/2026-11-25-account-withdrawal.md).
+
 ## 서버
 
 API 서버는 별도 저장소에 있습니다 → [ssen-server](https://github.com/ssen-voca/ssen-server)

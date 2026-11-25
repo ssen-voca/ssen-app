@@ -1,4 +1,4 @@
-import { getMe, joinClassroom, login, refresh, signup } from './auth';
+import { getMe, joinClassroom, login, refresh, signup, withdraw } from './auth';
 import { ApiError, request } from './client';
 
 jest.mock('./client', () => ({ ...jest.requireActual('./client'), request: jest.fn() }));
@@ -109,5 +109,21 @@ describe('joinClassroom', () => {
   it('passes server errors through', async () => {
     mockRequest.mockRejectedValue(new ApiError(404, '참여 코드를 확인해 주세요.'));
     await expect(joinClassroom('tok', 'ZZZZZZ')).rejects.toMatchObject({ status: 404, message: '참여 코드를 확인해 주세요.' });
+  });
+});
+
+describe('withdraw', () => {
+  it('posts the last four digits with the access token and returns nothing', async () => {
+    mockRequest.mockResolvedValueOnce(undefined);
+    await expect(withdraw('tok', '1234')).resolves.toBeUndefined();
+    expect(mockRequest).toHaveBeenCalledWith('/api/me/withdraw', { method: 'POST', body: { phoneLast4: '1234' }, token: 'tok' });
+  });
+
+  it.each([
+    [403, '번호가 올바르지 않아요.'],
+    [429, '시도 횟수를 초과했어요. 5분 뒤에 다시 시도해 주세요.'],
+  ])('passes %i errors through', async (status, message) => {
+    mockRequest.mockRejectedValue(new ApiError(status, message));
+    await expect(withdraw('tok', '0000')).rejects.toMatchObject({ status, message });
   });
 });
