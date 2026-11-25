@@ -3,7 +3,17 @@ import { ApiError, request } from './client';
 export type Tokens = { accessToken: string; refreshToken: string };
 export type Credentials = { school: string; name: string; phoneLast4: string };
 export type Classroom = { id: number; name: string; code: string };
-export type User = { id: number; name: string; role: string; email: string | null; school: string | null; classroom: Classroom | null };
+// 교사 계정의 표시 구분. 조교는 교사와 권한이 같고(role은 TEACHER) 표시만 다르다. 학생은 null.
+export type Position = 'TEACHER' | 'ASSISTANT';
+export type User = {
+  id: number;
+  name: string;
+  role: string;
+  position: Position | null;
+  email: string | null;
+  school: string | null;
+  classroom: Classroom | null;
+};
 
 const BAD_RESPONSE = '서버 응답이 올바르지 않아요';
 
@@ -32,6 +42,12 @@ function toClassroom(value: unknown): Classroom | null {
   return { id: raw.id, name: raw.name, code: raw.code };
 }
 
+// 표시용 값이라 인증이 깨지지 않게 관대하게 읽는다: 구버전 서버처럼 키가 없거나 모르는 값이면 교사는 교사로, 그 밖은 null로 본다.
+function toPosition(value: unknown, role: string): Position | null {
+  if (role !== 'TEACHER') return null;
+  return value === 'ASSISTANT' ? 'ASSISTANT' : 'TEACHER';
+}
+
 function toUser(value: unknown): User {
   const raw = fields(value);
   if (typeof raw.id !== 'number' || typeof raw.name !== 'string' || typeof raw.role !== 'string') {
@@ -40,7 +56,15 @@ function toUser(value: unknown): User {
   if (raw.email !== null && typeof raw.email !== 'string') throw new ApiError(0, BAD_RESPONSE);
   // school·classroom 키가 없으면(undefined) 구버전 응답이므로 거절한다. 없는 값은 명시적인 null이다.
   if (raw.school !== null && typeof raw.school !== 'string') throw new ApiError(0, BAD_RESPONSE);
-  return { id: raw.id, name: raw.name, role: raw.role, email: raw.email, school: raw.school, classroom: toClassroom(raw.classroom) };
+  return {
+    id: raw.id,
+    name: raw.name,
+    role: raw.role,
+    position: toPosition(raw.position, raw.role),
+    email: raw.email,
+    school: raw.school,
+    classroom: toClassroom(raw.classroom),
+  };
 }
 
 export async function signup(credentials: Credentials): Promise<Tokens> {
