@@ -41,6 +41,7 @@ export default function AccountScreen() {
       >
         {teacher && <ChoiceCard icon="↑" title="단어 엑셀 올리기" sub="수업에 단어를 한꺼번에 올려요" onPress={() => router.push('/upload')} />}
         {teacher && <ChoiceCard icon="≡" title="올린 단어 관리" sub="올린 단어를 보고 고치거나 지워요" onPress={() => router.push('/manage-words')} />}
+        {teacher && <ChoiceCard icon="◎" title="수업 관리" sub="이름·참여·학생을 관리해요" onPress={() => router.push('/manage-classes')} />}
         {user.role === 'STUDENT' && (
           <ChoiceCard
             icon="＋"

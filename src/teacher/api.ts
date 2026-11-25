@@ -2,7 +2,8 @@ import { ApiError, request } from '../api/client';
 import { session } from '../auth/session';
 import type { Word } from '../data/types';
 
-export type TeacherClassroom = { id: number; name: string; code: string; createdAt: string };
+export type TeacherClassroom = { id: number; name: string; code: string; createdAt: string; joinable: boolean; studentCount: number };
+export type ClassroomStudent = { id: number; name: string; school: string | null };
 export type PublishResult = { created: number; updated: number; deleted?: number };
 
 const BAD_RESPONSE = '서버 응답이 올바르지 않아요';
@@ -13,7 +14,15 @@ function toClassroom(value: unknown): TeacherClassroom {
   if (!raw || typeof raw !== 'object' || typeof raw.id !== 'number' || typeof raw.name !== 'string' || typeof raw.code !== 'string') {
     throw new ApiError(0, BAD_RESPONSE);
   }
-  return { id: raw.id, name: raw.name, code: raw.code, createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : '' };
+  // joinable·studentCount는 구버전 서버에 없을 수 있어 기본값으로 둔다.
+  return {
+    id: raw.id,
+    name: raw.name,
+    code: raw.code,
+    createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : '',
+    joinable: typeof raw.joinable === 'boolean' ? raw.joinable : true,
+    studentCount: typeof raw.studentCount === 'number' ? raw.studentCount : 0,
+  };
 }
 
 export async function listClassrooms(): Promise<TeacherClassroom[]> {
@@ -24,6 +33,36 @@ export async function listClassrooms(): Promise<TeacherClassroom[]> {
 
 export async function createClassroom(name: string): Promise<TeacherClassroom> {
   return toClassroom(await session.call((token) => request<unknown>('/api/teacher/classrooms', { token, method: 'POST', body: { name } })));
+}
+
+const classroomPath = (id: number) => `/api/teacher/classrooms/${id}`;
+
+export async function updateClassroom(id: number, changes: { name?: string; joinable?: boolean }): Promise<TeacherClassroom> {
+  return toClassroom(await session.call((token) => request<unknown>(classroomPath(id), { token, method: 'PATCH', body: changes })));
+}
+
+export async function reissueClassroomCode(id: number): Promise<TeacherClassroom> {
+  return toClassroom(await session.call((token) => request<unknown>(`${classroomPath(id)}/code`, { token, method: 'POST' })));
+}
+
+function toStudent(value: unknown): ClassroomStudent {
+  const raw = value as Record<string, unknown> | null;
+  if (!raw || typeof raw !== 'object' || typeof raw.id !== 'number' || typeof raw.name !== 'string') throw new ApiError(0, BAD_RESPONSE);
+  return { id: raw.id, name: raw.name, school: typeof raw.school === 'string' ? raw.school : null };
+}
+
+export async function listClassroomStudents(id: number): Promise<ClassroomStudent[]> {
+  const raw = await session.call((token) => request<unknown>(`${classroomPath(id)}/students`, { token }));
+  if (!Array.isArray(raw)) throw new ApiError(0, BAD_RESPONSE);
+  return raw.map(toStudent);
+}
+
+export async function removeClassroomStudent(id: number, studentId: number): Promise<void> {
+  await session.call((token) => request<unknown>(`${classroomPath(id)}/students/${studentId}`, { token, method: 'DELETE' }));
+}
+
+export async function deleteClassroom(id: number): Promise<void> {
+  await session.call((token) => request<unknown>(classroomPath(id), { token, method: 'DELETE' }));
 }
 
 const isStrings = (value: unknown) => Array.isArray(value) && value.every((v) => typeof v === 'string');
