@@ -71,3 +71,8 @@ export async function joinClassroom(accessToken: string, code: string): Promise<
 export async function leaveClassroom(accessToken: string): Promise<void> {
   await request<void>('/api/me/classroom', { method: 'DELETE', token: accessToken });
 }
+
+// 성공하면 204(본문 없음). 번호가 틀리면 서버가 401이 아닌 403을 준다(401은 앱이 로그인 만료로 보고 로그아웃을 시도한다).
+export async function withdraw(accessToken: string, phoneLast4: string): Promise<void> {
+  await request<unknown>('/api/me/withdraw', { method: 'POST', body: { phoneLast4 }, token: accessToken });
+}

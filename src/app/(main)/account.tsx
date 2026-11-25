@@ -62,6 +62,9 @@ export default function AccountScreen() {
             toast('로그아웃했어요');
           }}
         />
+        {user.role === 'STUDENT' && (
+          <ChoiceCard icon="✕" title="회원 탈퇴" sub="계정과 내가 만든 단어를 지워요" onPress={() => router.push('/withdraw')} />
+        )}
       </ChoiceView>
     );
   }
