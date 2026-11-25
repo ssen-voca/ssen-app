@@ -1,4 +1,4 @@
-import { getMe, joinClassroom, login, refresh, signup } from './auth';
+import { getMe, joinClassroom, leaveClassroom, login, refresh, signup } from './auth';
 import { ApiError, request } from './client';
 
 jest.mock('./client', () => ({ ...jest.requireActual('./client'), request: jest.fn() }));
@@ -109,5 +109,18 @@ describe('joinClassroom', () => {
   it('passes server errors through', async () => {
     mockRequest.mockRejectedValue(new ApiError(404, '참여 코드를 확인해 주세요.'));
     await expect(joinClassroom('tok', 'ZZZZZZ')).rejects.toMatchObject({ status: 404, message: '참여 코드를 확인해 주세요.' });
+  });
+});
+
+describe('leaveClassroom', () => {
+  it('sends DELETE to the classroom path with the access token', async () => {
+    mockRequest.mockResolvedValueOnce(undefined);
+    await expect(leaveClassroom('tok')).resolves.toBeUndefined();
+    expect(mockRequest).toHaveBeenCalledWith('/api/me/classroom', { method: 'DELETE', token: 'tok' });
+  });
+
+  it('passes server errors through', async () => {
+    mockRequest.mockRejectedValue(new ApiError(403, '학생만 사용할 수 있어요.'));
+    await expect(leaveClassroom('tok')).rejects.toMatchObject({ status: 403, message: '학생만 사용할 수 있어요.' });
   });
 });
