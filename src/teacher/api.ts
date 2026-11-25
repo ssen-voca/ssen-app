@@ -3,7 +3,7 @@ import { session } from '../auth/session';
 import type { Word } from '../data/types';
 
 export type TeacherClassroom = { id: number; name: string; code: string; createdAt: string };
-export type PublishResult = { created: number; updated: number };
+export type PublishResult = { created: number; updated: number; deleted?: number };
 
 const BAD_RESPONSE = '서버 응답이 올바르지 않아요';
 
@@ -26,10 +26,59 @@ export async function createClassroom(name: string): Promise<TeacherClassroom> {
   return toClassroom(await session.call((token) => request<unknown>('/api/teacher/classrooms', { token, method: 'POST', body: { name } })));
 }
 
-export async function publishWords(classroomId: number, words: Word[]): Promise<PublishResult> {
+const isStrings = (value: unknown) => Array.isArray(value) && value.every((v) => typeof v === 'string');
+
+function toWord(value: unknown): Word {
+  const raw = value as Record<string, unknown> | null;
+  if (
+    !raw ||
+    typeof raw !== 'object' ||
+    typeof raw.id !== 'string' ||
+    typeof raw.word !== 'string' ||
+    typeof raw.chapter !== 'string' ||
+    !isStrings(raw.meanings) ||
+    !isStrings(raw.synonyms) ||
+    !raw.details ||
+    typeof raw.details !== 'object'
+  ) {
+    throw new ApiError(0, BAD_RESPONSE);
+  }
+  return raw as unknown as Word;
+}
+
+const wordsPath = (classroomId: number) => `/api/teacher/classrooms/${classroomId}/words`;
+
+export async function getClassroomWords(classroomId: number): Promise<Word[]> {
+  const raw = await session.call((token) => request<unknown>(wordsPath(classroomId), { token }));
+  if (!Array.isArray(raw)) throw new ApiError(0, BAD_RESPONSE);
+  return raw.map(toWord);
+}
+
+export async function updateClassroomWord(classroomId: number, word: Word): Promise<Word> {
+  return toWord(
+    await session.call((token) =>
+      request<unknown>(`${wordsPath(classroomId)}/${encodeURIComponent(word.id)}`, { token, method: 'PUT', body: word }),
+    ),
+  );
+}
+
+export async function deleteClassroomWord(classroomId: number, wordId: string): Promise<void> {
+  await session.call((token) => request<unknown>(`${wordsPath(classroomId)}/${encodeURIComponent(wordId)}`, { token, method: 'DELETE' }));
+}
+
+export async function deleteChapter(classroomId: number, chapter: string): Promise<void> {
+  await session.call((token) =>
+    request<unknown>(`/api/teacher/classrooms/${classroomId}/chapters/${encodeURIComponent(chapter)}`, { token, method: 'DELETE' }),
+  );
+}
+
+export async function publishWords(classroomId: number, words: Word[], options: { replace?: boolean } = {}): Promise<PublishResult> {
+  const replace = options.replace === true;
   const raw = (await session.call((token) =>
-    request<unknown>(`/api/teacher/classrooms/${classroomId}/words`, { token, method: 'POST', body: words }),
+    request<unknown>(`${wordsPath(classroomId)}${replace ? '?replace=true' : ''}`, { token, method: 'POST', body: words }),
   )) as Record<string, unknown> | null;
   if (!raw || typeof raw.created !== 'number' || typeof raw.updated !== 'number') throw new ApiError(0, BAD_RESPONSE);
-  return { created: raw.created, updated: raw.updated };
+  if (!replace) return { created: raw.created, updated: raw.updated };
+  if (typeof raw.deleted !== 'number') throw new ApiError(0, BAD_RESPONSE);
+  return { created: raw.created, updated: raw.updated, deleted: raw.deleted };
 }

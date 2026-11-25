@@ -32,6 +32,10 @@ npm run build:web  # dist/ 에 정적 웹 결과물 생성
 
 수업에서 나가려면 내 정보 → `수업 나가기`를 누르고 확인 화면에서 한 번 더 확인합니다 (#46). 내가 만든 단어와 북마크는 그대로이고, 같은 참여코드로 다시 들어오면 선생님 단어가 돌아옵니다. [스펙](docs/superpowers/specs/2026-11-25-leave-classroom.md)
 
+## 올린 단어 관리
+
+교사는 내 정보 → `올린 단어 관리`에서 수업을 고르고, 올린 단어를 차시별로 보며 고치거나 지울 수 있습니다. 엑셀 올리기에서는 `이 파일에 없는 단어는 지우기`로 차시 단위 교체도 됩니다 (#44). 자세한 내용은 [스펙](docs/superpowers/specs/2026-11-25-teacher-word-management.md).
+
 ## 서버
 
 API 서버는 별도 저장소에 있습니다 → [ssen-server](https://github.com/ssen-voca/ssen-server)

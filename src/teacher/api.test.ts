@@ -1,5 +1,5 @@
 import { ApiError, request } from '../api/client';
-import { createClassroom, listClassrooms, publishWords } from './api';
+import { createClassroom, deleteChapter, deleteClassroomWord, getClassroomWords, listClassrooms, publishWords, updateClassroomWord } from './api';
 import type { Word } from '../data/types';
 
 jest.mock('../api/client', () => ({ ...jest.requireActual('../api/client'), request: jest.fn() }));
@@ -39,7 +39,65 @@ describe('teacher api requests', () => {
   });
 });
 
+describe('teacher word management requests', () => {
+  it('lists the classroom words', async () => {
+    mockRequest.mockResolvedValue([WORD]);
+    await expect(getClassroomWords(3)).resolves.toEqual([WORD]);
+    expect(mockRequest).toHaveBeenCalledWith('/api/teacher/classrooms/3/words', { token: 'tok' });
+  });
+
+  it('updates a word by id with the id in the body too', async () => {
+    mockRequest.mockResolvedValue(WORD);
+    await expect(updateClassroomWord(3, WORD)).resolves.toEqual(WORD);
+    expect(mockRequest).toHaveBeenCalledWith('/api/teacher/classrooms/3/words/import%3AWeek%201%3A1', { token: 'tok', method: 'PUT', body: WORD });
+  });
+
+  it('deletes a word', async () => {
+    mockRequest.mockResolvedValue(undefined);
+    await expect(deleteClassroomWord(3, WORD.id)).resolves.toBeUndefined();
+    expect(mockRequest).toHaveBeenCalledWith('/api/teacher/classrooms/3/words/import%3AWeek%201%3A1', { token: 'tok', method: 'DELETE' });
+  });
+
+  it('deletes a chapter with the name encoded', async () => {
+    mockRequest.mockResolvedValue(undefined);
+    await expect(deleteChapter(3, 'Week 1')).resolves.toBeUndefined();
+    expect(mockRequest).toHaveBeenCalledWith('/api/teacher/classrooms/3/chapters/Week%201', { token: 'tok', method: 'DELETE' });
+  });
+
+  it('adds replace=true only when asked and returns deleted', async () => {
+    mockRequest.mockResolvedValue({ created: 1, updated: 2, deleted: 3 });
+    await expect(publishWords(3, [WORD], { replace: true })).resolves.toEqual({ created: 1, updated: 2, deleted: 3 });
+    expect(mockRequest).toHaveBeenCalledWith('/api/teacher/classrooms/3/words?replace=true', { token: 'tok', method: 'POST', body: [WORD] });
+    mockRequest.mockResolvedValue({ created: 1, updated: 2, deleted: 3 });
+    await expect(publishWords(3, [WORD], { replace: false })).resolves.toEqual({ created: 1, updated: 2 });
+    expect(mockRequest).toHaveBeenLastCalledWith('/api/teacher/classrooms/3/words', { token: 'tok', method: 'POST', body: [WORD] });
+  });
+
+  it('passes the server message of a duplicate word (409) through', async () => {
+    mockRequest.mockRejectedValue(new ApiError(409, '같은 단어가 이미 있어요.'));
+    await expect(updateClassroomWord(3, WORD)).rejects.toMatchObject({ status: 409, message: '같은 단어가 이미 있어요.' });
+  });
+});
+
 describe('teacher api response shapes', () => {
+  it.each([undefined, null, {}, 'x', [null], [{}], [{ ...WORD, id: 1 }], [{ ...WORD, word: undefined }], [{ ...WORD, chapter: 1 }], [{ ...WORD, meanings: 'a' }], [{ ...WORD, meanings: [1] }], [{ ...WORD, synonyms: undefined }], [{ ...WORD, details: null }]])(
+    'rejects malformed word list %j',
+    async (body) => {
+      mockRequest.mockResolvedValue(body);
+      await expectBad(getClassroomWords(3));
+    },
+  );
+
+  it.each([undefined, null, [], { ...WORD, id: undefined }, { ...WORD, details: 'x' }])('rejects malformed saved word %j', async (body) => {
+    mockRequest.mockResolvedValue(body);
+    await expectBad(updateClassroomWord(3, WORD));
+  });
+
+  it.each([{ created: 1, updated: 0 }, { created: 1, updated: 0, deleted: '1' }])('rejects a replace result without a numeric deleted %j', async (body) => {
+    mockRequest.mockResolvedValue(body);
+    await expectBad(publishWords(3, [WORD], { replace: true }));
+  });
+
   it.each([undefined, null, {}, 'x', [{}], [{ ...CLASSROOM, id: '3' }], [{ ...CLASSROOM, name: 5 }], [{ ...CLASSROOM, code: undefined }], [null]])(
     'rejects malformed classroom list %j',
     async (body) => {

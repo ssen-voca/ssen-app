@@ -40,6 +40,7 @@ export default function AccountScreen() {
         }
       >
         {teacher && <ChoiceCard icon="↑" title="단어 엑셀 올리기" sub="수업에 단어를 한꺼번에 올려요" onPress={() => router.push('/upload')} />}
+        {teacher && <ChoiceCard icon="≡" title="올린 단어 관리" sub="올린 단어를 보고 고치거나 지워요" onPress={() => router.push('/manage-words')} />}
         {user.role === 'STUDENT' && (
           <ChoiceCard
             icon="＋"

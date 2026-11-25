@@ -7,13 +7,26 @@ import { ChoiceView } from '../components/ChoiceView';
 import { FormButton, FormError, FormInput } from '../components/FormControls';
 import { useToast } from '../components/Toast';
 import { colors } from '../theme';
-import { createClassroom, listClassrooms, publishWords, type TeacherClassroom } from './api';
+import { createClassroom, getClassroomWords, listClassrooms, publishWords, type TeacherClassroom } from './api';
+import type { Word } from '../data/types';
 import { parseWorkbook, type ParseIssue, type ParseResult } from './excel';
 import { readWorkbook } from './readWorkbook';
 
 const MAX_NAME = 100;
 const MAX_ISSUES = 20;
+const MAX_REMOVED = 20;
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : '요청에 실패했어요');
+
+type Removal = { state: 'idle' | 'loading' | 'ready' | 'error'; words: Word[]; error: string };
+const NO_REMOVAL: Removal = { state: 'idle', words: [], error: '' };
+const wordKey = (word: Word) => `${word.chapter}\u0000${word.word.trim().toLowerCase()}`;
+
+// 지워질 단어: 파일에 들어 있는 차시의 현재 단어 중, 같은 차시의 파일 단어에 없는 것(서버와 같은 비교).
+function removedWords(current: Word[], uploaded: Word[]): Word[] {
+  const chapters = new Set(uploaded.map((word) => word.chapter));
+  const keep = new Set(uploaded.map(wordKey));
+  return current.filter((word) => chapters.has(word.chapter) && !keep.has(wordKey(word)));
+}
 
 export default function UploadScreen() {
   const { status, user } = useAuth();
@@ -65,6 +78,8 @@ function TeacherUpload() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [result, setResult] = useState('');
+  const [replace, setReplace] = useState(false);
+  const [removal, setRemoval] = useState<Removal>(NO_REMOVAL);
   // 파일을 다시 고르면 앞선 읽기 결과는 버린다.
   const picked = useRef(0);
   const input = useRef<HTMLInputElement>(null);
@@ -95,6 +110,28 @@ function TeacherUpload() {
   }, [load]);
 
   const selected = classrooms.find((c) => c.id === selectedId) ?? null;
+  const hasErrors = !!parsed && parsed.errors.length > 0;
+
+  // 교체를 켜면 현재 단어를 불러와 지워질 단어를 계산한다. 파일·수업·토글이 바뀌면 앞선 계산은 버린다.
+  useEffect(() => {
+    if (!replace || selectedId === null || !parsed || hasErrors) {
+      setRemoval(NO_REMOVAL);
+      return;
+    }
+    let stale = false;
+    setRemoval({ state: 'loading', words: [], error: '' });
+    getClassroomWords(selectedId).then(
+      (current) => {
+        if (!stale) setRemoval({ state: 'ready', words: removedWords(current, parsed.words), error: '' });
+      },
+      (error) => {
+        if (!stale) setRemoval({ state: 'error', words: [], error: errorMessage(error) });
+      },
+    );
+    return () => {
+      stale = true;
+    };
+  }, [replace, selectedId, parsed, hasErrors]);
 
   const create = async () => {
     const trimmed = name.trim();
@@ -122,6 +159,7 @@ function TeacherUpload() {
     setReadError('');
     setUploadError('');
     setResult('');
+    setReplace(false);
     try {
       const next = parseWorkbook(await readWorkbook(file));
       if (picked.current === mine && mounted.current) setParsed(next);
@@ -135,9 +173,11 @@ function TeacherUpload() {
     setUploading(true);
     setUploadError('');
     try {
-      const { created, updated } = await publishWords(selected.id, parsed.words);
+      const { created, updated, deleted = 0 } = await (replace
+        ? publishWords(selected.id, parsed.words, { replace: true })
+        : publishWords(selected.id, parsed.words));
       if (!mounted.current) return;
-      const message = `새로 ${created}개, 고친 ${updated}개를 올렸어요.`;
+      const message = replace ? `새로 ${created}개, 고친 ${updated}개, 지운 ${deleted}개를 올렸어요.` : `새로 ${created}개, 고친 ${updated}개를 올렸어요.`;
       picked.current++;
       setResult(message);
       setParsed(null);
@@ -150,9 +190,18 @@ function TeacherUpload() {
     }
   };
 
-  const hasErrors = !!parsed && parsed.errors.length > 0;
   const words = parsed?.words ?? [];
-  const canUpload = !!selected && !!parsed && !hasErrors && words.length > 0 && !uploading;
+  const replaceReady = !replace || removal.state === 'ready';
+  const canUpload = !!selected && !!parsed && !hasErrors && words.length > 0 && !uploading && replaceReady;
+  const uploadLabel = hasErrors
+    ? '오류가 있어 올릴 수 없어요'
+    : !replace
+      ? `${words.length}개 단어 올리기`
+      : removal.state === 'ready'
+        ? `${words.length}개 올리고 ${removal.words.length}개 지우기`
+        : removal.state === 'error'
+          ? '지워질 단어를 확인하지 못해 올릴 수 없어요'
+          : '지워질 단어를 확인하는 중이에요';
 
   return (
     <ChoiceView kicker="TEACHER" title="단어 올리기" description="수업을 고르고 엑셀 파일을 올리면 그 수업 학생들의 단어장에 들어가요.">
@@ -222,11 +271,34 @@ function TeacherUpload() {
           <Issues issues={parsed.warnings} />
           <Issues issues={parsed.errors} color={colors.danger} />
           {hasErrors && <AppText style={styles.blocked}>오류를 고친 뒤 파일을 다시 골라 주세요.</AppText>}
+          {!hasErrors && (
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: replace }}
+              onPress={() => setReplace((on) => !on)}
+              style={[styles.toggle, replace && styles.rowSelected]}
+            >
+              <View style={[styles.box, replace && styles.boxChecked]}>{replace && <AppText style={styles.check}>✓</AppText>}</View>
+              <AppText style={styles.toggleText}>이 파일에 없는 단어는 지우기 (차시 단위로 교체)</AppText>
+            </Pressable>
+          )}
+          {!hasErrors && replace && removal.state === 'loading' && <AppText style={styles.note}>지워질 단어를 확인하는 중이에요.</AppText>}
+          {!hasErrors && replace && removal.state === 'error' && <FormError message={`지워질 단어를 불러오지 못했어요. ${removal.error} 교체를 끄면 올릴 수 있어요.`} />}
+          {!hasErrors && replace && removal.state === 'ready' && (
+            <View style={styles.issues}>
+              <AppText style={styles.removed}>{removal.words.length > 0 ? `지워질 단어 ${removal.words.length}개` : '지워질 단어가 없어요.'}</AppText>
+              {removal.words.slice(0, MAX_REMOVED).map((word) => (
+                <AppText key={word.id} style={styles.removedWord}>{`${word.chapter} · ${word.word}`}</AppText>
+              ))}
+              {removal.words.length > MAX_REMOVED && <AppText style={styles.removedWord}>{`외 ${removal.words.length - MAX_REMOVED}개`}</AppText>}
+              {removal.words.length > 0 && <AppText style={styles.removed}>학생이 북마크한 단어도 함께 사라져요.</AppText>}
+            </View>
+          )}
         </Section>
       )}
 
       <Section title="올리기">
-        <FormButton label={hasErrors ? '오류가 있어 올릴 수 없어요' : `${words.length}개 단어 올리기`} disabled={!canUpload} onPress={() => void upload()} />
+        <FormButton label={uploadLabel} disabled={!canUpload} onPress={() => void upload()} />
         <FormError message={uploadError} />
         {result !== '' && <AppText style={styles.result}>{result}</AppText>}
       </Section>
@@ -250,5 +322,12 @@ const styles = StyleSheet.create({
   issues: { marginTop: 12, rowGap: 4 },
   issue: { marginLeft: 2, color: colors.muted, fontSize: 12, lineHeight: 18 },
   blocked: { marginTop: 12, marginLeft: 2, color: colors.danger, fontSize: 13, fontWeight: '700' },
+  toggle: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14, padding: 14, borderWidth: 1, borderColor: '#e9e5de', borderRadius: 14, backgroundColor: colors.surface },
+  box: { width: 20, height: 20, borderWidth: 1, borderColor: '#c9c5d3', borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  boxChecked: { borderColor: colors.accent, backgroundColor: colors.accent },
+  check: { color: '#fff', fontSize: 13, fontWeight: '800', lineHeight: 16 },
+  toggleText: { flex: 1, fontSize: 13, fontWeight: '700', lineHeight: 20 },
+  removed: { marginLeft: 2, color: colors.danger, fontSize: 13, fontWeight: '700' },
+  removedWord: { marginLeft: 2, color: colors.danger, fontSize: 12, lineHeight: 18 },
   result: { marginTop: 12, marginLeft: 2, color: colors.accent, fontSize: 13, fontWeight: '700' },
 });
