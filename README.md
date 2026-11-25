@@ -30,6 +30,10 @@ npm run build:web  # dist/ 에 정적 웹 결과물 생성
 
 학생은 내 정보 → `수업 참여하기`에서 선생님께 받은 6자리 참여코드를 입력해 수업에 들어가고, 그 수업의 교사 단어장을 함께 봅니다 (#35). 코드를 5번 틀리면 5분간 잠깁니다. 자세한 내용은 [스펙](docs/superpowers/specs/2026-11-22-join-classroom.md).
 
+## 올린 단어 관리
+
+교사는 내 정보 → `올린 단어 관리`에서 수업을 고르고, 올린 단어를 차시별로 보며 고치거나 지울 수 있습니다. 엑셀 올리기에서는 `이 파일에 없는 단어는 지우기`로 차시 단위 교체도 됩니다 (#44). 자세한 내용은 [스펙](docs/superpowers/specs/2026-11-25-teacher-word-management.md).
+
 ## 서버
 
 API 서버는 별도 저장소에 있습니다 → [ssen-server](https://github.com/ssen-voca/ssen-server)
