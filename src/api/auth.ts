@@ -66,3 +66,8 @@ export async function joinClassroom(accessToken: string, code: string): Promise<
   if (!classroom) throw new ApiError(0, BAD_RESPONSE);
   return classroom;
 }
+
+// 서버는 수업이 없어도 204를 돌려준다(여러 번 불러도 같다).
+export async function leaveClassroom(accessToken: string): Promise<void> {
+  await request<void>('/api/me/classroom', { method: 'DELETE', token: accessToken });
+}
