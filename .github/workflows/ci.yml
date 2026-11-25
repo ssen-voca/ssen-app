@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [develop]
+
+# 같은 PR에서 새 푸시가 오면 이전 실행은 멈춘다.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: 타입체크 · 테스트
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  build:
+    name: 웹 · 네이티브 번들 빌드
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: 웹 빌드
+        run: npm run build:web
+      # 웹 위주로 개발하는 동안에도 iOS/Android용 JS 번들이 깨지지 않는지 확인한다 (스토어용 앱 빌드가 아니다).
+      - name: 네이티브 번들 빌드 (iOS, Android)
+        run: npx expo export --platform ios --platform android --output-dir "$RUNNER_TEMP/native-bundle"
