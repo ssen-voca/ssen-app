@@ -1,5 +1,18 @@
 import { ApiError, request } from '../api/client';
-import { createClassroom, deleteChapter, deleteClassroomWord, getClassroomWords, listClassrooms, publishWords, updateClassroomWord } from './api';
+import {
+  createClassroom,
+  deleteChapter,
+  deleteClassroom,
+  deleteClassroomWord,
+  getClassroomWords,
+  listClassroomStudents,
+  listClassrooms,
+  publishWords,
+  reissueClassroomCode,
+  removeClassroomStudent,
+  updateClassroom,
+  updateClassroomWord,
+} from './api';
 import type { Word } from '../data/types';
 
 jest.mock('../api/client', () => ({ ...jest.requireActual('../api/client'), request: jest.fn() }));
@@ -7,7 +20,7 @@ jest.mock('../auth/session', () => ({ session: { call: jest.fn((fn: (token: stri
 
 const mockRequest = request as jest.MockedFunction<typeof request>;
 const BAD = '서버 응답이 올바르지 않아요';
-const CLASSROOM = { id: 3, name: '겨울 특강 A반', code: 'ABC234', createdAt: '2026-11-20T01:02:03Z' };
+const CLASSROOM = { id: 3, name: '겨울 특강 A반', code: 'ABC234', createdAt: '2026-11-20T01:02:03Z', joinable: true, studentCount: 2 };
 const WORD: Word = { id: 'import:Week 1:1', word: 'insight', meanings: ['통찰'], synonyms: [''], chapter: 'Week 1', details: { example: '', exampleKo: '', exampleMeaning: '' } };
 
 async function expectBad(pending: Promise<unknown>) {
@@ -119,5 +132,66 @@ describe('teacher api response shapes', () => {
   it('lets server errors through untouched', async () => {
     mockRequest.mockRejectedValue(new ApiError(413, '파일이 너무 커요'));
     await expect(publishWords(3, [WORD])).rejects.toMatchObject({ status: 413, message: '파일이 너무 커요' });
+  });
+});
+
+describe('teacher classroom management requests', () => {
+  it('patches only the given fields', async () => {
+    mockRequest.mockResolvedValue({ ...CLASSROOM, joinable: false });
+    await expect(updateClassroom(3, { joinable: false })).resolves.toEqual({ ...CLASSROOM, joinable: false });
+    expect(mockRequest).toHaveBeenCalledWith('/api/teacher/classrooms/3', { token: 'tok', method: 'PATCH', body: { joinable: false } });
+    await updateClassroom(3, { name: '새 이름' });
+    expect(mockRequest).toHaveBeenLastCalledWith('/api/teacher/classrooms/3', { token: 'tok', method: 'PATCH', body: { name: '새 이름' } });
+  });
+
+  it('reissues the code with a bodiless POST', async () => {
+    mockRequest.mockResolvedValue({ ...CLASSROOM, code: 'NEW234' });
+    await expect(reissueClassroomCode(3)).resolves.toMatchObject({ code: 'NEW234' });
+    expect(mockRequest).toHaveBeenCalledWith('/api/teacher/classrooms/3/code', { token: 'tok', method: 'POST' });
+  });
+
+  it('lists the students', async () => {
+    mockRequest.mockResolvedValue([{ id: 7, name: '김학생', school: '한빛중' }, { id: 8, name: '이학생', school: null }, { id: 9, name: '박학생' }]);
+    await expect(listClassroomStudents(3)).resolves.toEqual([
+      { id: 7, name: '김학생', school: '한빛중' },
+      { id: 8, name: '이학생', school: null },
+      { id: 9, name: '박학생', school: null },
+    ]);
+    expect(mockRequest).toHaveBeenCalledWith('/api/teacher/classrooms/3/students', { token: 'tok' });
+  });
+
+  it('removes a student and deletes a classroom', async () => {
+    mockRequest.mockResolvedValue(undefined);
+    await expect(removeClassroomStudent(3, 7)).resolves.toBeUndefined();
+    expect(mockRequest).toHaveBeenCalledWith('/api/teacher/classrooms/3/students/7', { token: 'tok', method: 'DELETE' });
+    await expect(deleteClassroom(3)).resolves.toBeUndefined();
+    expect(mockRequest).toHaveBeenLastCalledWith('/api/teacher/classrooms/3', { token: 'tok', method: 'DELETE' });
+  });
+
+  it('falls back to joinable=true and studentCount=0 for an older server', async () => {
+    const { joinable, studentCount, ...old } = CLASSROOM;
+    mockRequest.mockResolvedValue([old, { ...old, joinable: 'no', studentCount: '2' }]);
+    await expect(listClassrooms()).resolves.toEqual([
+      { ...old, joinable: true, studentCount: 0 },
+      { ...old, joinable: true, studentCount: 0 },
+    ]);
+  });
+
+  it.each([undefined, null, {}, 'x', [null], [{}], [{ id: '7', name: 'a' }], [{ id: 7, name: 5 }]])('rejects malformed student list %j', async (body) => {
+    mockRequest.mockResolvedValue(body);
+    await expectBad(listClassroomStudents(3));
+  });
+
+  it.each([undefined, null, [], { ...CLASSROOM, id: '3' }, { ...CLASSROOM, code: 5 }])('rejects malformed updated classroom %j', async (body) => {
+    mockRequest.mockResolvedValue(body);
+    await expectBad(updateClassroom(3, { joinable: true }));
+    await expectBad(reissueClassroomCode(3));
+  });
+
+  it('passes server messages through', async () => {
+    mockRequest.mockRejectedValue(new ApiError(404, '학생을 찾을 수 없어요.'));
+    await expect(removeClassroomStudent(3, 7)).rejects.toMatchObject({ status: 404, message: '학생을 찾을 수 없어요.' });
+    mockRequest.mockRejectedValue(new ApiError(400, '수업 이름을 적어 주세요.'));
+    await expect(updateClassroom(3, { name: ' ' })).rejects.toMatchObject({ status: 400, message: '수업 이름을 적어 주세요.' });
   });
 });
